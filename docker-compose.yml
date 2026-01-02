@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # 1. MySQL Database Service
+  mysqldb:
+    image: mysql:8.0
+    container_name: clinic-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Pabasara  
+      MYSQL_DATABASE: new_clinic_manage_db
+    ports:
+      - "3307:3306" 
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # 2. Backend Service
+  backend:
+    build: ./backend  
+    container_name: clinic-backend
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mysqldb
+    environment:
+      # Docker ඇතුලේ localhost කියන්නේ 'mysqldb'
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/new_clinic_manage_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Pabasara
+
+  # 3. Frontend Service
+  frontend:
+    build: ./frontend 
+    container_name: clinic-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
