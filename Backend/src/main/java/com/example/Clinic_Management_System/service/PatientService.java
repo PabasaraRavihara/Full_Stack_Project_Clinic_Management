@@ -19,4 +19,8 @@ public interface PatientService {
     List<Patient> getAllPatients();
 
     Patient findByEmail(String email);
+
+    boolean emailExists(String email);
+
+    Patient createPatient(Patient patient);
 }

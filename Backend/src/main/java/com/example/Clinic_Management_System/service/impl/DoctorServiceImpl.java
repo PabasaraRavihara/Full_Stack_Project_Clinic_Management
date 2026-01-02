@@ -1,9 +1,10 @@
 package com.example.Clinic_Management_System.service.impl;
 
 import com.example.Clinic_Management_System.model.Doctor;
-import com.example.Clinic_Management_System.repository.DoctorRepo; 
+import com.example.Clinic_Management_System.repository.DoctorRepo;
 import com.example.Clinic_Management_System.service.DoctorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,10 +14,14 @@ import java.util.Optional;
 public class DoctorServiceImpl implements DoctorService {
 
     @Autowired
-    private DoctorRepo doctorRepo; 
+    private DoctorRepo doctorRepo;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Doctor saveDoctor(Doctor doctor) {
+        doctor.setPassword(passwordEncoder.encode(doctor.getPassword()));
         return doctorRepo.save(doctor);
     }
 
@@ -41,7 +46,7 @@ public class DoctorServiceImpl implements DoctorService {
         existingDoctor.setEmail(doctor.getEmail());
         existingDoctor.setPhone(doctor.getPhone());
         existingDoctor.setExperience(doctor.getExperience());
-        // existingDoctor.setPassword(doctor.getPassword()); 
+        // existingDoctor.setPassword(doctor.getPassword());
 
         return doctorRepo.save(existingDoctor);
     }
@@ -68,5 +73,16 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public Optional<Doctor> findById(Long doctorId) {
         return doctorRepo.findById(doctorId);
+    }
+
+    @Override
+    public boolean emailExists(String email) {
+        return doctorRepo.findByEmail(email).isPresent();
+    }
+
+    @Override
+    public Doctor createDoctor(Doctor doctor) {
+        doctor.setPassword(passwordEncoder.encode(doctor.getPassword()));
+        return doctorRepo.save(doctor);
     }
 }

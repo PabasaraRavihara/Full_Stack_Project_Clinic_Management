@@ -26,6 +26,16 @@ public class PatientServiceImpl implements PatientService {
     public Patient findByEmail(String email) {
         return patientRepositary.findByEmail(email);
     }
+
+    @Override
+    public boolean emailExists(String email) {
+        return false;
+    }
+
+    @Override
+    public Patient createPatient(Patient patient) {
+        return null;
+    }
     // ----------------------------------------------------------------
 
     @Override

@@ -22,4 +22,8 @@ public interface DoctorService {
 
    
     Optional<Doctor> findById(Long doctorId);
+
+    boolean emailExists(String email);
+
+    Doctor createDoctor(Doctor doctor);
 }

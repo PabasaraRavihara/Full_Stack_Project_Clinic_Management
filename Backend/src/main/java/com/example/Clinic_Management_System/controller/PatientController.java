@@ -2,74 +2,80 @@ package com.example.Clinic_Management_System.controller;
 
 import com.example.Clinic_Management_System.model.Patient;
 import com.example.Clinic_Management_System.service.PatientService;
+import com.example.Clinic_Management_System.service.CustomUserDetailsService;
+import com.example.Clinic_Management_System.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map; // Map json data handling
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/patients")
-@CrossOrigin(origins = "http://localhost:5173") // Frontend Connection
+@CrossOrigin(origins = "*")
 public class PatientController {
 
-    private final PatientService service;
+    @Autowired
+    private PatientService patientService;
 
-    public PatientController(PatientService service) {
-        this.service = service;
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    // --- NEW: LOGIN METHOD ---
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
-        String email = loginData.get("email");
-        String password = loginData.get("password");
+    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String password = request.get("password");
 
-        // 1. Email looking Patient 
-        Patient patient = service.findByEmail(email);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, password));
 
-        // 2. Patient and Password matching check
-        if (patient != null && patient.getPassword().equals(password)) {
-            return ResponseEntity.ok(patient); // Success: Patient Object 
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Email or Password");
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+            boolean isPatient = userDetails.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"));
+
+            if (!isPatient) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Access denied: Not a PATIENT account");
+            }
+
+            String token = jwtUtil.generateToken(email, "ROLE_PATIENT");
+            return ResponseEntity.ok(token);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid email or password");
         }
-    }
-    // -------------------------
-
-    @GetMapping
-    public List<Patient> getAll() { return service.getAllPatients(); }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Patient> getById(@PathVariable Long id) {
-        return service.findById(id)
-                .map(p -> new ResponseEntity<>(p, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping
-    public ResponseEntity<Patient> create(@RequestBody Patient patient) {
-        
-        
-        Patient saved = service.savePatient(patient);
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+    public ResponseEntity<Patient> createPatient(@RequestBody Patient patient) {
+        try {
+            if (patientService.emailExists(patient.getEmail())) {
+                return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+            }
+
+            Patient createdPatient = patientService.createPatient(patient);
+            return new ResponseEntity<>(createdPatient, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Patient> update(@PathVariable Long id, @RequestBody Patient patient) {
-        return service.findById(id).map(existing -> {
-            existing.setFirstName(patient.getFirstName());
-            existing.setLastName(patient.getLastName());
-            existing.setEmail(patient.getEmail());
-            // Password update 
-            return new ResponseEntity<>(service.savePatient(existing), HttpStatus.OK);
-        }).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.deletePatient(id);
-        return ResponseEntity.noContent().build();
+    @GetMapping
+    public ResponseEntity<List<Patient>> getAllPatients() {
+        return new ResponseEntity<>(patientService.getAllPatients(), HttpStatus.OK);
     }
 }
