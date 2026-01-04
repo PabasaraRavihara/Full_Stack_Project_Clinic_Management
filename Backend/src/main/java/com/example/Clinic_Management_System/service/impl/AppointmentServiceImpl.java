@@ -2,6 +2,7 @@ package com.example.Clinic_Management_System.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,7 +11,7 @@ import com.example.Clinic_Management_System.dto.AppointmentRequest;
 import com.example.Clinic_Management_System.model.Appointment;
 import com.example.Clinic_Management_System.model.Doctor;
 import com.example.Clinic_Management_System.model.Patient;
-import com.example.Clinic_Management_System.repository.AppointmentRepositary;
+import com.example.Clinic_Management_System.repository.AppointmentRepositary; 
 import com.example.Clinic_Management_System.repository.DoctorRepo;
 import com.example.Clinic_Management_System.repository.PatientRepositary;
 import com.example.Clinic_Management_System.service.AppointmentService;
@@ -20,7 +21,7 @@ import com.example.Clinic_Management_System.service.EmailService;
 public class AppointmentServiceImpl implements AppointmentService {
 
     @Autowired
-    private AppointmentRepositary appointmentRepositary;
+    private AppointmentRepositary appointmentRepository;
 
     @Autowired
     private DoctorRepo doctorRepository;
@@ -31,103 +32,30 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Autowired
     private EmailService emailService;
 
-   
-
-    //  Add Appointment for a specific doctor
-    @Override
-    public Appointment addAppointment(Long doctorId, Appointment appointment) {
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + doctorId));
-        appointment.setDoctor(doctor);
-        return appointmentRepositary.save(appointment);
-    }
-
-    //  Get appointments for a specific doctor
-    @Override
-    public List<Appointment> getAppointmentsByDoctorId(Long doctorId) {
-        return appointmentRepositary.findByDoctorId(doctorId);
-    }
-
-    //  Create Appointment (general)
-    @Override
-    public Appointment createAppointment(Long doctorId, Appointment appointment) {
-        return addAppointment(doctorId, appointment);
-    }
-
-    //  Save appointment in the database
-    @Override
-    public Appointment saveAppointment(Appointment appointment) {
-        return appointmentRepositary.save(appointment);
-    }
-
-    @Override
-    public List<Appointment> getAppointmentsByDoctor(Long doctorId) {
-        return null;
-    }
-
-    //  Get all appointments
-    @Override
-    public List<Appointment> getAllAppointments() {
-        return appointmentRepositary.findAll();
-    }
-
-    //  Get appointment by ID
-    @Override
-    public Appointment getAppointmentById(long id) {
-        return appointmentRepositary.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + id));
-    }
-
-    // Update appointment
-    @Override
-    public Appointment updateAppointment(Appointment appointment, long id) {
-        Appointment existingAppointment = appointmentRepositary.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + id));
-
-        existingAppointment.setDate(appointment.getDate());
-        existingAppointment.setTime(appointment.getTime());
-        existingAppointment.setDoctor(appointment.getDoctor());
-        existingAppointment.setPatient(appointment.getPatient());
-        existingAppointment.setStatus(appointment.getStatus());
-
-        return appointmentRepositary.save(existingAppointment);
-    }
-
-    @Override
-    public boolean deleteAppointment(long id) {
-        if (!appointmentRepositary.existsById(id)) {
-            return false;
-        }
-        appointmentRepositary.deleteById(id);
-        return true;
-    }
-
-    // --- New Features (Updated bookAppointment) ---
-
-  
+    // --- 1. PATIENT BOOKING (With Validation) ---
     @Override
     public Appointment bookAppointment(AppointmentRequest request) {
         
-        // --- NEW: Double Booking Validation Start ---
-    
-        boolean isTaken = appointmentRepositary.existsByDoctorIdAndDateAndTimeAndStatusNot(
+        // Validation: Double Booking Check
+        boolean isTaken = appointmentRepository.existsByDoctorIdAndDateAndTimeAndStatusNot(
                 request.getDoctorId(), 
                 request.getDate(), 
                 request.getTime(), 
-                "REJECTED"
+                "REJECTED" 
         );
 
         if (isTaken) {
             throw new RuntimeException("This time slot is already booked! Please choose another time.");
         }
-        // --- NEW: Double Booking Validation End ---
 
+        // Fetch Entities
         Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new RuntimeException("Patient not found with ID: " + request.getPatientId()));
 
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + request.getDoctorId()));
 
+        // Create Object
         Appointment appointment = new Appointment();
         appointment.setPatient(patient);
         appointment.setDoctor(doctor);
@@ -135,22 +63,21 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setTime(request.getTime());
         appointment.setNotes(request.getNotes());
         appointment.setStatus("PENDING");
-        // DateTime 
         appointment.setAppointmentTime(LocalDateTime.of(request.getDate(), request.getTime()));
 
-        return appointmentRepositary.save(appointment);
+        return appointmentRepository.save(appointment);
     }
 
-    // 2. Status  Update  Email  (Accept/Reject)
+    // --- 2. DOCTOR STATUS UPDATE (With Email) ---
     @Override
     public Appointment updateStatus(Long appointmentId, String status) {
-        Appointment appointment = appointmentRepositary.findById(appointmentId)
+        Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         appointment.setStatus(status);
-        Appointment updatedAppointment = appointmentRepositary.save(appointment);
+        Appointment updatedAppointment = appointmentRepository.save(appointment);
 
-        // REJECTED  Email 
+        // Send Email only if REJECTED
         if ("REJECTED".equalsIgnoreCase(status)) {
             String patientEmail = appointment.getPatient().getEmail();
             if (patientEmail != null && !patientEmail.isEmpty()) {
@@ -163,5 +90,36 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
         }
         return updatedAppointment;
+    }
+
+    // --- 3. GENERAL METHODS ---
+
+    @Override
+    public Appointment saveAppointment(Appointment appointment) {
+        return appointmentRepository.save(appointment);
+    }
+
+    @Override
+    public List<Appointment> getAllAppointments() {
+        return appointmentRepository.findAll();
+    }
+
+    @Override
+    public Optional<Appointment> findById(Long id) {
+        return appointmentRepository.findById(id);
+    }
+
+    @Override
+    public List<Appointment> getAppointmentsByDoctorId(Long doctorId) {
+        return appointmentRepository.findByDoctorId(doctorId);
+    }
+
+    @Override
+    public boolean deleteAppointment(Long id) {
+        if (!appointmentRepository.existsById(id)) {
+            return false;
+        }
+        appointmentRepository.deleteById(id);
+        return true;
     }
 }

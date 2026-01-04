@@ -25,54 +25,64 @@ public class BillingController {
     @Autowired
     private AppointmentService appointmentService;
 
-    // ✅ Get All Billings
+    // Get All Billings
     @GetMapping
     public ResponseEntity<List<Billing>> getAllBillings() {
         return new ResponseEntity<>(billingService.getAllBillings(), HttpStatus.OK);
     }
 
-    // ✅ Get Billing By ID (Fixed Optional issue)
+    // Get Billing By ID
     @GetMapping("/{id}")
     public ResponseEntity<Billing> getBillingById(@PathVariable("id") Long billId) {
         Optional<Billing> billing = billingService.getBillingById(billId);
-        
-        // Optional  Data  OK or NOT FOUND
         return billing.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                       .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    // ✅ Create Billing (Fixed method name 'createBilling')
+    // Create Billing (Robust Logic)
     @PostMapping
     public ResponseEntity<?> createBilling(@RequestBody Map<String, Object> body) {
         try {
-            // 1. Appointment ID  JSON 
-            Map<String, Object> appointmentMap = (Map<String, Object>) body.get("appointment");
-            Long appointmentId = Long.valueOf(appointmentMap.get("id").toString());
+            // Extract Appointment ID
+            Long appointmentId;
+            if (body.get("appointment") instanceof Map) {
+                Map<String, Object> appointmentMap = (Map<String, Object>) body.get("appointment");
+                appointmentId = Long.valueOf(appointmentMap.get("id").toString());
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Invalid Appointment format");
+            }
 
-            // 2. Appointment  Database seraching
-            Appointment appointment = appointmentService.getAppointmentById(appointmentId);
+            // Fetch Appointment (Use findById from service)
+            Appointment appointment = appointmentService.findById(appointmentId).orElse(null);
 
             if (appointment == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Appointment ID not found.");
             }
 
-            // 3. Billing Object 
+            // Create Billing Object
             Billing billing = new Billing();
-            billing.setAmount(Double.valueOf(body.get("amount").toString()));
+            
+            // Safe Parsing for Amount
+            if (body.get("amount") != null) {
+                billing.setAmount(Double.valueOf(body.get("amount").toString()));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: Amount is required");
+            }
+
             billing.setPaymentMethod((String) body.get("paymentMethod"));
             billing.setStatus((String) body.get("status"));
             
-            // Date entry
+            // Date Parsing
             if (body.get("paymentDate") != null) {
                 billing.setPaymentDate(LocalDateTime.parse((String) body.get("paymentDate")));
             } else {
                 billing.setPaymentDate(LocalDateTime.now());
             }
 
-            // 4.set the Appointment 
+            // Set Relationship
             billing.setAppointment(appointment);
 
-            // 5. Save 
+            // Save
             Billing savedBilling = billingService.createBilling(billing);
             return new ResponseEntity<>(savedBilling, HttpStatus.CREATED);
 
@@ -82,7 +92,7 @@ public class BillingController {
         }
     }
 
-    // ✅ Update Billing
+    // Update Billing
     @PutMapping("/{id}")
     public ResponseEntity<Billing> updateBilling(@PathVariable("id") Long billId, @RequestBody Billing billingDetails) {
         Billing updatedBilling = billingService.updateBilling(billId, billingDetails);
@@ -94,11 +104,10 @@ public class BillingController {
         }
     }
 
-    // ✅ Delete Billing (Fixed void return issue)
+    // Delete Billing
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteBilling(@PathVariable("id") Long billId) {
         try {
-            
             if (billingService.billingExists(billId)) {
                 billingService.deleteBilling(billId); 
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);

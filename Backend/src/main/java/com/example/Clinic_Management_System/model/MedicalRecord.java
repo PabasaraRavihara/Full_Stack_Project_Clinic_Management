@@ -1,6 +1,8 @@
 package com.example.Clinic_Management_System.model;
+
 import jakarta.persistence.*;
 import java.time.LocalDate;
+
 @Entity
 public class MedicalRecord {
     @Id
@@ -12,12 +14,12 @@ public class MedicalRecord {
     private String notes;
     private LocalDate recordDate;
 
-    // relationships (optional, connect to Patient or Doctor)
-    @ManyToOne
+    // --- FIX: Add FetchType.EAGER to ensure Patient data is loaded ---
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_id")
     private Patient patient;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;
 

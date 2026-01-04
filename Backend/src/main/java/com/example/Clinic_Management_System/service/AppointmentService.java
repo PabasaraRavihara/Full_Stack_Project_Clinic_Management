@@ -1,27 +1,30 @@
 package com.example.Clinic_Management_System.service;
+
 import com.example.Clinic_Management_System.dto.AppointmentRequest;
 import com.example.Clinic_Management_System.model.Appointment;
 import java.util.List;
+import java.util.Optional;
 
 public interface AppointmentService {
 
+    // Patient Booking Logic (DTO -> Entity)
+    Appointment bookAppointment(AppointmentRequest request);
 
-    Appointment createAppointment(Long doctorId, Appointment appointment);
-
+    // General Save (For updates or simple saves)
     Appointment saveAppointment(Appointment appointment);
 
-    Appointment bookAppointment(AppointmentRequest request);
+    // Status Update (Accept/Reject)
     Appointment updateStatus(Long appointmentId, String status);
 
-    // Get appointments for a doctor
-    List<Appointment> getAppointmentsByDoctor(Long doctorId);
-
+    // Get All
     List<Appointment> getAllAppointments();
-    Appointment getAppointmentById(long id);
-    Appointment updateAppointment(Appointment appointment, long id);
-    boolean deleteAppointment(long id);
 
-    List<Appointment> getAppointmentsByDoctorId(Long id);
+    // Get Single by ID (Optional - for Controller compatibility)
+    Optional<Appointment> findById(Long id);
 
-    Appointment addAppointment(Long id, Appointment appointment);
+    // Get Appointments by Doctor
+    List<Appointment> getAppointmentsByDoctorId(Long doctorId);
+
+    // Delete
+    boolean deleteAppointment(Long id);
 }
