@@ -62,9 +62,9 @@ public class AdminController {
             return ResponseEntity.ok(token);
 
         } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid email or password");
+            e.printStackTrace();
+            
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login Failed: " + e.getMessage());
         }
     }
 

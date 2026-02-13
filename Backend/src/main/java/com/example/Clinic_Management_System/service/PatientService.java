@@ -1,12 +1,14 @@
 package com.example.Clinic_Management_System.service;
+
 import java.util.List;
 import java.util.Optional;
-
 import com.example.Clinic_Management_System.model.Patient;
 
 public interface PatientService {
 
     Patient savePatient(Patient patient);
+
+    Patient createPatient(Patient patient);
 
     Patient getPatientById(long id);
 
@@ -21,6 +23,4 @@ public interface PatientService {
     Patient findByEmail(String email);
 
     boolean emailExists(String email);
-
-    Patient createPatient(Patient patient);
 }

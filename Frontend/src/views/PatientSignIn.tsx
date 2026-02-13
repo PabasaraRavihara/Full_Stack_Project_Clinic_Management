@@ -32,7 +32,16 @@ const PatientSignIn = ({setViewMode}: PatientSignInProps) => {
 
       if (response.status === 200) {
         console.log("Patient Login Success!");
-        localStorage.setItem('patientData', JSON.stringify(response.data));
+        
+        // --- FIX: Extract Token and Patient Data separately ---
+        // Backend now returns { "token": "...", "patient": { ... } }
+        const { token, patient } = response.data;
+
+        // Save Token (Important for API Calls)
+        localStorage.setItem('token', token);
+        
+        // Save Patient Object (This fixes the empty profile issue in Dashboard)
+        localStorage.setItem('patientData', JSON.stringify(patient));
         
         // Redirect to Dashboard
         navigate('/patient-dashboard'); 

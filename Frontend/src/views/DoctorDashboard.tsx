@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axiosConfig'; 
+import api from '../api/axios.Config'; 
 import { UserIcon, SignInIcon, ListIcon, PlusIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
 
 // --- Interfaces ---
@@ -51,9 +51,8 @@ const DoctorDashboard = () => {
   // --- States ---
   const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'appointments' | 'records' | 'billing'>('dashboard');
   
-  // Sub Tabs (View vs Add)
+  // Sub Tabs
   const [patientSubTab, setPatientSubTab] = useState<'view' | 'add'>('view');
-  const [appointmentSubTab, setAppointmentSubTab] = useState<'view' | 'add'>('view');
   const [recordSubTab, setRecordSubTab] = useState<'view' | 'add'>('view');
   const [billingSubTab, setBillingSubTab] = useState<'view' | 'add'>('view');
 
@@ -69,13 +68,11 @@ const DoctorDashboard = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // Forms State
-  // [UPDATED] newPatient state password field 
   const [newPatient, setNewPatient] = useState<Patient>({ 
       firstName: '', lastName: '', email: '', phone: '', 
       address: '', age: '', gender: '', password: '' 
   });
   
-  const [newAppointment, setNewAppointment] = useState({ patientId: '', doctorId: '', date: '', time: '', notes: '' });
   const [newRecord, setNewRecord] = useState({ patientId: '', doctorId: '', diagnosis: '', treatment: '', notes: '', recordDate: '' });
   const [newBill, setNewBill] = useState({ appointmentId: '', amount: '', paymentMethod: 'CASH', status: 'PAID' });
 
@@ -84,19 +81,41 @@ const DoctorDashboard = () => {
     navigate('/doctor-login');
   };
 
+  // ✅ HELPER: Token Extraction
+  const getAuthConfig = () => {
+      const storedData = localStorage.getItem('doctorData');
+      let token = null;
+      if (storedData) {
+          try {
+              const parsed = JSON.parse(storedData);
+              token = parsed.token || parsed; 
+          } catch (e) {
+              token = storedData;
+          }
+      }
+      return {
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+          }
+      };
+  };
+
   // --- API Calls (Fetch Data) ---
   const fetchData = async () => {
     try {
-        const pRes = await api.get('/patients');
+        const config = getAuthConfig();
+
+        const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        const aRes = await api.get('/appointments'); 
+        const aRes = await api.get('/appointments', config); 
         setAppointmentsList(aRes.data);
 
-        const rRes = await api.get('/medical-records');
+        const rRes = await api.get('/medical-records', config);
         setRecordsList(rRes.data);
 
-        const bRes = await api.get('/billings');
+        const bRes = await api.get('/billings', config);
         setBillingsList(bRes.data);
         
         const total = bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0);
@@ -114,45 +133,31 @@ const DoctorDashboard = () => {
   const resetForms = () => {
       setIsEditing(false);
       setEditingId(null);
-      // [UPDATED] Reset password field too
       setNewPatient({ firstName: '', lastName: '', email: '', phone: '', address: '', age: '', gender: '', password: '' });
-      setNewAppointment({ patientId: '', doctorId: '', date: '', time: '', notes: '' });
       setNewRecord({ patientId: '', doctorId: '', diagnosis: '', treatment: '', notes: '', recordDate: '' });
       setNewBill({ appointmentId: '', amount: '', paymentMethod: 'CASH', status: 'PAID' });
   };
 
-  // --- NEW: Handle Status Update (Accept/Reject) ---
-  const handleStatusUpdate = async (id: number, status: string) => {
-    if(!window.confirm(`Are you sure you want to ${status} this appointment?`)) return;
-
-    try {
-        await api.put(`/appointments/${id}/status?status=${status}`);
-        alert(`Appointment ${status} Successfully!`);
-        fetchData(); 
-    } catch (error) {
-        console.error(error);
-        alert("Update Failed!");
-    }
-  };
-
-  // --- ACTIONS: PATIENTS (Add, Update, Delete) ---
+  // --- ACTIONS: PATIENTS ---
   const handleSavePatient = async () => {
     try {
-        // [ADDED]  Patient  Password 
         if (!isEditing && !newPatient.password) {
             alert("Please enter a password for the new patient!");
             return;
         }
 
+        const config = getAuthConfig();
+
         if (isEditing && editingId) {
-            await api.put(`/patients/${editingId}`, newPatient);
+            await api.put(`/patients/${editingId}`, newPatient, config);
             alert("Patient Updated!");
         } else {
-            await api.post('/patients', newPatient);
+            await api.post('/patients', newPatient, config);
             alert("Patient Added Successfully!");
         }
+        
         resetForms();
-        fetchData();
+        setTimeout(() => { fetchData(); }, 500); 
         setPatientSubTab('view');
     } catch (error) { 
         console.error(error);
@@ -163,74 +168,65 @@ const DoctorDashboard = () => {
   const handleDeletePatient = async (id: number) => {
       if(!window.confirm("Are you sure you want to delete this patient?")) return;
       try {
-          await api.delete(`/patients/${id}`);
+          const config = getAuthConfig();
+          await api.delete(`/patients/${id}`, config);
           alert("Patient Deleted!");
           fetchData();
-      } catch { alert("Error Deleting Patient!"); }
+      } catch (error) { 
+          console.error(error);
+          alert("Error Deleting Patient!"); 
+      }
   };
 
   const startEditPatient = (p: Patient) => {
-      // [UPDATED] Edit  Password (Empty )
       setNewPatient({ ...p, password: '' }); 
       setIsEditing(true);
       setEditingId(p.id!);
       setPatientSubTab('add');
   };
 
-  // --- ACTIONS: APPOINTMENTS (Add, Update, Delete) ---
-  const handleSaveAppointment = async () => {
+  // --- ACTIONS: APPOINTMENTS ---
+  const handleStatusUpdate = async (id: number, status: string) => {
+    const action = status === 'APPROVED' ? 'Accept' : 'Reject';
+    if(!window.confirm(`Are you sure you want to ${action} this appointment?`)) return;
+
     try {
-       const appointmentTime = `${newAppointment.date}T${newAppointment.time}:00`;
-       const payload = { ...newAppointment, time: newAppointment.time + ":00", appointmentTime, status: "SCHEDULED" };
-       
-       if (isEditing && editingId) {
-           await api.put(`/appointments/${editingId}`, payload);
-           alert("Appointment Updated!");
-       } else {
-           await api.post('/appointments', payload);
-           alert("Appointment Booked!");
-       }
-       resetForms();
-       fetchData();
-       setAppointmentSubTab('view');
-    } catch { alert("Error Saving Appointment!"); }
+        const config = getAuthConfig();
+        await api.put(`/appointments/${id}/status?status=${status}`, {}, config);
+        
+        alert(`Appointment ${status === 'APPROVED' ? 'Accepted' : 'Rejected'}!`);
+        if(status === 'REJECTED') {
+             alert("Patient has been notified via Email.");
+        }
+        fetchData(); 
+    } catch (error) {
+        console.error(error);
+        alert("Update Failed!");
+    }
   };
 
-  const handleDeleteAppointment = async (id: number) => {
-      if(!window.confirm("Cancel this appointment?")) return;
-      try {
-          await api.delete(`/appointments/${id}`);
-          fetchData();
-      } catch { alert("Error Deleting Appointment!"); }
-  };
-
-  const startEditAppointment = (a: Appointment) => {
-      setNewAppointment({
-          patientId: a.patient?.id?.toString() || '',
-          doctorId: '1', 
-          date: a.date,
-          time: a.time,
-          notes: ''
-      });
-      setIsEditing(true);
-      setEditingId(a.id);
-      setAppointmentSubTab('add');
-  };
-
-  // --- ACTIONS: RECORDS (Add, Update, Delete) ---
+  // --- ACTIONS: RECORDS ---
   const handleSaveRecord = async () => {
     try { 
+        const config = getAuthConfig();
+        
+        const payload = {
+            ...newRecord,
+            recordDate: newRecord.recordDate ? newRecord.recordDate : new Date().toISOString().split('T')[0]
+        };
+
         if (isEditing && editingId) {
-            await api.put(`/medical-records/${editingId}`, newRecord); 
+            await api.put(`/medical-records/${editingId}`, payload, config); 
             alert("Record Updated!"); 
         } else {
-            await api.post('/medical-records', newRecord); 
+            await api.post('/medical-records', payload, config); 
             alert("Record Added!"); 
         }
         resetForms(); 
         fetchData(); 
         setRecordSubTab('view'); 
-    } catch { 
+    } catch (err) { 
+        console.error(err);
         alert("Error Saving Record!"); 
     }
   };
@@ -238,7 +234,8 @@ const DoctorDashboard = () => {
   const handleDeleteRecord = async (id: number) => {
       if(!window.confirm("Delete this record?")) return;
       try {
-          await api.delete(`/medical-records/${id}`);
+          const config = getAuthConfig();
+          await api.delete(`/medical-records/${id}`, config);
           fetchData();
       } catch { alert("Error Deleting Record!"); }
   };
@@ -252,40 +249,46 @@ const DoctorDashboard = () => {
           notes: r.notes,
           recordDate: r.recordDate
       });
-      
       setIsEditing(true);
       setEditingId(r.id);
       setRecordSubTab('add');
   };
 
-  // --- ACTIONS: BILLING (Add, Delete, Print) ---
+  // --- ACTIONS: BILLING (FIXED) ---
   const handleSaveBill = async () => {
       try {
+          const config = getAuthConfig();
+          
+          // FIX: Ensure values are Numbers
           const payload = { 
-              amount: newBill.amount, 
+              amount: Number(newBill.amount),  // Convert to Number
               paymentMethod: newBill.paymentMethod, 
               status: newBill.status, 
               paymentDate: new Date().toISOString().slice(0, 19), 
-              appointment: { id: newBill.appointmentId } 
+              appointment: { id: Number(newBill.appointmentId) } // Convert to Number
           };
           
           if(isEditing && editingId) {
-             await api.put(`/billings/${editingId}`, payload);
+             await api.put(`/billings/${editingId}`, payload, config);
              alert("Bill Updated!");
           } else {
-             await api.post('/billings', payload);
+             await api.post('/billings', payload, config);
              alert("Bill Created!");
           }
           resetForms();
           fetchData();
           setBillingSubTab('view');
-      } catch { alert("Error Saving Bill!"); }
+      } catch (error) { 
+          console.error(error); // See exact error in console
+          alert("Error Saving Bill!"); 
+      }
   };
 
   const handleDeleteBill = async (id: number) => {
       if(!window.confirm("Delete this bill?")) return;
       try {
-          await api.delete(`/billings/${id}`);
+          const config = getAuthConfig();
+          await api.delete(`/billings/${id}`, config);
           fetchData();
       } catch { alert("Error Deleting Bill!"); }
   };
@@ -302,7 +305,7 @@ const DoctorDashboard = () => {
       setBillingSubTab('add');
   };
 
-  // --- PRINT BILL FUNCTION ---
+  // --- PRINT BILL ---
   const printBill = (bill: Billing) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (printWindow) {
@@ -374,13 +377,11 @@ const DoctorDashboard = () => {
           </body>
         </html>
       `;
-      
       printWindow.document.write(invoiceHTML);
       printWindow.document.close();
     }
   };
 
-  // --- Styles ---
   const sidebarColor = '#2E7D32'; 
   const activeTextColor = '#2E7D32'; 
   const btnStyle = { padding: '5px 10px', margin: '0 5px', border: 'none', borderRadius: '5px', cursor: 'pointer', color: 'white' };
@@ -460,7 +461,6 @@ const DoctorDashboard = () => {
                           </div>
                           <div className="form-group"><label>Address</label><input value={newPatient.address} onChange={e => setNewPatient({...newPatient, address: e.target.value})}/></div>
                           
-                          {/* --- [ADDED] PASSWORD FIELD --- */}
                           <div className="form-group">
                               <label>Password</label>
                               <input 
@@ -470,7 +470,6 @@ const DoctorDashboard = () => {
                                   onChange={e => setNewPatient({...newPatient, password: e.target.value})}
                               />
                           </div>
-                          {/* ----------------------------- */}
 
                           <button type="button" className="save-btn" onClick={handleSavePatient}>{isEditing ? 'Update Patient' : 'Save Patient'}</button>
                       </form>
@@ -482,13 +481,8 @@ const DoctorDashboard = () => {
           {/* 3. APPOINTMENTS TAB */}
           {activeTab === 'appointments' && (
             <section className="doctors-section">
-              <div className="action-buttons-container">
-                <button className={`action-btn ${appointmentSubTab === 'view' ? 'active' : ''}`} onClick={() => {setAppointmentSubTab('view'); resetForms();}}><ListIcon /> View List</button>
-                <button className={`action-btn ${appointmentSubTab === 'add' ? 'active' : ''}`} onClick={() => {setAppointmentSubTab('add'); resetForms();}}><PlusIcon /> Book Appointment</button>
-              </div>
-
-              {appointmentSubTab === 'view' ? (
-                  <div className="table-container">
+               <div className="table-container">
+                    <h3 style={{marginBottom:'15px', color:'#2E7D32'}}>Appointment Requests</h3>
                     <table className="data-table">
                         <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
@@ -504,41 +498,24 @@ const DoctorDashboard = () => {
                                         </span>
                                     </td>
                                     <td>
-                                        {a.status === 'PENDING' && (
+                                        {a.status === 'PENDING' ? (
                                             <>
                                                 <button style={{...btnStyle, background:'#28a745'}} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
                                                 <button style={{...btnStyle, background:'#dc3545'}} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
                                             </>
+                                        ) : (
+                                            <span style={{fontSize:'0.8rem', color:'#777'}}>Action Taken</span>
                                         )}
-                                        <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditAppointment(a)}>Edit</button>
-                                        <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteAppointment(a.id)}>Delete</button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                   </div>
-              ) : (
-                  <div className="form-container">
-                      <h3>{isEditing ? 'Edit Appointment' : 'Book Appointment'}</h3>
-                      <form className="admin-form">
-                          <div className="form-row">
-                              <div className="form-group"><label>Patient ID</label><input type="number" value={newAppointment.patientId} onChange={e => setNewAppointment({...newAppointment, patientId: e.target.value})}/></div>
-                              <div className="form-group"><label>Doctor ID</label><input type="number" value={newAppointment.doctorId} onChange={e => setNewAppointment({...newAppointment, doctorId: e.target.value})}/></div>
-                          </div>
-                          <div className="form-row">
-                              <div className="form-group"><label>Date</label><input type="date" value={newAppointment.date} onChange={e => setNewAppointment({...newAppointment, date: e.target.value})}/></div>
-                              <div className="form-group"><label>Time</label><input type="time" value={newAppointment.time} onChange={e => setNewAppointment({...newAppointment, time: e.target.value})}/></div>
-                          </div>
-                          <div className="form-group"><label>Notes</label><input value={newAppointment.notes} onChange={e => setNewAppointment({...newAppointment, notes: e.target.value})}/></div>
-                          <button type="button" className="save-btn" style={{background:'#2E7D32'}} onClick={handleSaveAppointment}>{isEditing ? 'Update' : 'Confirm'}</button>
-                      </form>
-                  </div>
-              )}
             </section>
           )}
 
-          {/* 4. RECORDS & 5. BILLING (Existing code) */}
+          {/* 4. RECORDS & BILLING */}
           {activeTab === 'records' && (
             <section className="doctors-section">
                <div className="action-buttons-container">
@@ -572,6 +549,16 @@ const DoctorDashboard = () => {
                        <form className="admin-form">
                            <div className="form-group"><label>Patient ID</label><input type="number" value={newRecord.patientId} onChange={e => setNewRecord({...newRecord, patientId: e.target.value})} /></div>
                            <div className="form-group"><label>Doctor ID</label><input type="number" value={newRecord.doctorId} onChange={e => setNewRecord({...newRecord, doctorId: e.target.value})} /></div>
+                           
+                           <div className="form-group">
+                               <label>Record Date</label>
+                               <input 
+                                   type="date" 
+                                   value={newRecord.recordDate} 
+                                   onChange={e => setNewRecord({...newRecord, recordDate: e.target.value})} 
+                               />
+                           </div>
+
                            <div className="form-group"><label>Diagnosis</label><input value={newRecord.diagnosis} onChange={e => setNewRecord({...newRecord, diagnosis: e.target.value})} /></div>
                            <div className="form-group"><label>Treatment</label><input value={newRecord.treatment} onChange={e => setNewRecord({...newRecord, treatment: e.target.value})} /></div>
                            <button type="button" className="save-btn" style={{background:'#2E7D32'}} onClick={handleSaveRecord}>{isEditing ? 'Update Record' : 'Save Record'}</button>
