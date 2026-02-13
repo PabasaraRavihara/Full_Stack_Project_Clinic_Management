@@ -1,6 +1,6 @@
 # 🏥 HealthCare+ Clinic Management System (Frontend) #
 
-**HealthCare+** is a modern, responsive and interactive frontend application for managing clinic operations. Built with **React**, **TypeScript**  and **Vite**, it features role-based dashboards for **Patients**, **Doctors**  and **Administrators**, enhanced with advanced animations and **Glassmorphism UI design**.
+**HealthCare+** is a modern, responsive and interactive frontend application for managing clinic operations. Built with **React**, **TypeScript**  and **Vite**, it features role-based dashboards for **Patients**, **Doctors**  and **Administrators**, enhanced with advanced animations and **Glassmorphism UI design**..
 
 ---
 
@@ -173,5 +173,5 @@ git push origin feature/AmazingFeature
 ```
 ---
 ## Developed by ❤️ Health Care+ Team
----
+----
 
