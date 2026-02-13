@@ -28,13 +28,15 @@ public class CustomUserDetailsService implements UserDetailsService {
     private DoctorRepo doctorRepo; 
 
     @Autowired
-    private PatientRepositary patientRepositary; // Patient Repository 
+    private PatientRepositary patientRepositary;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        
+        // Convert email to lower case for case-insensitive matching
+        String searchEmail = email.toLowerCase().trim();
+
         // 1. Check Admin
-        Optional<Admin> admin = adminRepository.findByEmail(email);
+        Optional<Admin> admin = adminRepository.findByEmail(searchEmail);
         if (admin.isPresent()) {
             return new User(
                 admin.get().getEmail(), 
@@ -44,8 +46,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         // 2. Check Doctor
-        Optional<Doctor> doctor = doctorRepo.findByEmail(email); 
-        if (doctor.isPresent()) {          
+        Optional<Doctor> doctor = doctorRepo.findByEmail(searchEmail); 
+        if (doctor.isPresent()) {           
             return new User(
                 doctor.get().getEmail(), 
                 doctor.get().getPassword(), 
@@ -53,17 +55,16 @@ public class CustomUserDetailsService implements UserDetailsService {
             );
         }
 
-        // 3. Check Patient 
-        Patient patient = patientRepositary.findByEmail(email);
-        if (patient != null) {
+        // 3. Check Patient (Updated to Optional for safety)
+        Optional<Patient> patient = Optional.ofNullable(patientRepositary.findByEmail(searchEmail));
+        if (patient.isPresent()) {
             return new User(
-                patient.getEmail(),
-                patient.getPassword(),
+                patient.get().getEmail(),
+                patient.get().getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_PATIENT"))
             );
         }
 
-        
         throw new UsernameNotFoundException("User not found with email: " + email);
     }
 }
