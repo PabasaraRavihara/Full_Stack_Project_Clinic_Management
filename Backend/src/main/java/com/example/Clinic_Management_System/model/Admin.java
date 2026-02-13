@@ -14,8 +14,8 @@ public class Admin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="id")
-    private Long adminId;
+    @Column(name="id") // Database එකේ column නම
+    private Long id; // මෙතැන 'adminId' වෙනුවට 'id' ලෙස වෙනස් කළා
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -26,12 +26,13 @@ public class Admin {
     @Column(name = "password", nullable = false)
     private String password;
 
-    public Long getAdminId() {
-        return adminId;
+    // Getters and Setters
+    public Long getId() {
+        return id;
     }
 
-    public void setAdminId(Long adminId) {
-        this.adminId = adminId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
