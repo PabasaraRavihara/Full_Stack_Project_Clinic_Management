@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8083/api', // Make sure this matches your backend port
+  baseURL: 'https://natural-sapphira-clinic-app-a0ae043a.koyeb.app/api', // Make sure this matches your backend port
   headers: {
     'Content-Type': 'application/json',
   },
