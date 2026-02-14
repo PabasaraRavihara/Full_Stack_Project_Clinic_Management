@@ -4,6 +4,7 @@ import com.example.Clinic_Management_System.model.Admin;
 import com.example.Clinic_Management_System.repository.AdminRepository;
 import com.example.Clinic_Management_System.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +15,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public List<Admin> getAllAdmins() {
@@ -32,6 +36,8 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Admin createAdmin(Admin admin) {
+       
+        admin.setPassword(passwordEncoder.encode(admin.getPassword()));
         return adminRepository.save(admin);
     }
 
@@ -42,7 +48,10 @@ public class AdminServiceImpl implements AdminService {
             Admin existingAdmin = optionalAdmin.get();
             existingAdmin.setName(adminDetails.getName());
             existingAdmin.setEmail(adminDetails.getEmail());
-            existingAdmin.setPassword(adminDetails.getPassword());
+           
+            if (adminDetails.getPassword() != null && !adminDetails.getPassword().isEmpty()) {
+                existingAdmin.setPassword(passwordEncoder.encode(adminDetails.getPassword()));
+            }
             return adminRepository.save(existingAdmin);
         }
         return null;
@@ -65,6 +74,14 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Optional<Admin> authenticate(String email, String password) {
-        return adminRepository.findByEmailAndPassword(email, password);
+        
+        Optional<Admin> admin = adminRepository.findByEmail(email);
+        
+        
+        if (admin.isPresent() && passwordEncoder.matches(password, admin.get().getPassword())) {
+            return admin;
+        }
+        
+        return Optional.empty();
     }
 }
