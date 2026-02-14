@@ -16,12 +16,19 @@ interface Patient {
   password?: string;
 }
 
+interface Doctor {
+  id: number;
+  name: string;
+  specialization: string;
+}
+
 interface Appointment {
   id: number;
   date: string;
   time: string;
   status: string;
   patient: Patient;
+  doctor: Doctor; // Doctor විස්තර මෙතන තියෙනවා
 }
 
 interface MedicalRecord {
@@ -81,7 +88,7 @@ const DoctorDashboard = () => {
     navigate('/doctor-login');
   };
 
-  // ✅ HELPER: Token Extraction
+  // ✅ HELPER: Token & Doctor Data Extraction
   const getAuthConfig = () => {
       const storedData = localStorage.getItem('doctorData');
       let token = null;
@@ -105,12 +112,20 @@ const DoctorDashboard = () => {
   const fetchData = async () => {
     try {
         const config = getAuthConfig();
+        
+        // 1. ලොග් වී සිටින දොස්තරගේ දත්ත ලබාගැනීම
+        const storedData = localStorage.getItem('doctorData');
+        if (!storedData) return;
+        const loggedInDoctor = JSON.parse(storedData);
 
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
+        // 2. ඇපොයින්මන්ට්ස් ලබාගෙන ඒවා පෙරීම (Filter)
         const aRes = await api.get('/appointments', config); 
-        setAppointmentsList(aRes.data);
+        // ✅ ලොග් වී සිටින දොස්තරගේ ID එකට පමණක් අදාල දත්ත මෙතැනින් පෙරනවා
+        const filteredAppts = aRes.data.filter((app: Appointment) => app.doctor?.id === loggedInDoctor.id);
+        setAppointmentsList(filteredAppts);
 
         const rRes = await api.get('/medical-records', config);
         setRecordsList(rRes.data);
