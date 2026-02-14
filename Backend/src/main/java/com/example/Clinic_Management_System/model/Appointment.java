@@ -20,11 +20,15 @@ public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
+    
+    // මෙතන තිබුණු columnDefinition = "TIME(0)" අයින් කළා
     @JsonFormat(pattern = "HH:mm:ss")
-    @Column(name = "time", columnDefinition = "TIME(0)")
+    @Column(name = "time")
     private LocalTime time;
+    
     private String status;
 
     @ManyToOne(optional = false)
@@ -35,8 +39,9 @@ public class Appointment {
     @JoinColumn(name = "doctor_id", nullable = false)
     private Doctor doctor;
 
+    // මෙතන තිබුණු columnDefinition = "DATETIME(0)" අයින් කළා
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Column(name = "appointment_time", nullable = false, columnDefinition = "DATETIME(0)")
+    @Column(name = "appointment_time", nullable = false)
     private LocalDateTime appointmentTime;
 
     @Column(name = "notes")
@@ -81,8 +86,8 @@ public class Appointment {
     public void setNotes(String notes) {
         this.notes = notes;
     }
+    
     public LocalTime getTime() {
-
         return time;
     }
 
