@@ -16,19 +16,12 @@ interface Patient {
   password?: string;
 }
 
-interface Doctor {
-  id: number;
-  name: string;
-  specialization: string;
-}
-
 interface Appointment {
   id: number;
   date: string;
   time: string;
   status: string;
   patient: Patient;
-  doctor: Doctor; // Doctor විස්තර මෙතන තියෙනවා
 }
 
 interface MedicalRecord {
@@ -88,7 +81,7 @@ const DoctorDashboard = () => {
     navigate('/doctor-login');
   };
 
-  // ✅ HELPER: Token & Doctor Data Extraction
+  // ✅ HELPER: Token Extraction
   const getAuthConfig = () => {
       const storedData = localStorage.getItem('doctorData');
       let token = null;
@@ -112,20 +105,12 @@ const DoctorDashboard = () => {
   const fetchData = async () => {
     try {
         const config = getAuthConfig();
-        
-        // 1. ලොග් වී සිටින දොස්තරගේ දත්ත ලබාගැනීම
-        const storedData = localStorage.getItem('doctorData');
-        if (!storedData) return;
-        const loggedInDoctor = JSON.parse(storedData);
 
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        // 2. ඇපොයින්මන්ට්ස් ලබාගෙන ඒවා පෙරීම (Filter)
         const aRes = await api.get('/appointments', config); 
-        // ✅ ලොග් වී සිටින දොස්තරගේ ID එකට පමණක් අදාල දත්ත මෙතැනින් පෙරනවා
-        const filteredAppts = aRes.data.filter((app: Appointment) => app.doctor?.id === loggedInDoctor.id);
-        setAppointmentsList(filteredAppts);
+        setAppointmentsList(aRes.data);
 
         const rRes = await api.get('/medical-records', config);
         setRecordsList(rRes.data);
@@ -320,13 +305,22 @@ const DoctorDashboard = () => {
       setBillingSubTab('add');
   };
 
-  // --- PRINT BILL ---
+  // --- PRINT BILL (MODIFIED) ---
   const printBill = (bill: Billing) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (printWindow) {
-      const patientName = bill.appointment.patient ? `${bill.appointment.patient.firstName} ${bill.appointment.patient.lastName}` : "Unknown Patient";
+    
+    if (!printWindow) {
+      alert("Please allow popups to print the bill!");
+      return;
+    }
+
+    const patientName = bill.appointment?.patient 
+      ? `${bill.appointment.patient.firstName} ${bill.appointment.patient.lastName}` 
+      : "Unknown Patient";
       
-      const invoiceHTML = `
+    const billDate = new Date(bill.paymentDate).toLocaleDateString();
+
+    const invoiceHTML = `
         <html>
           <head>
             <title>Invoice #${bill.billId}</title>
@@ -353,14 +347,14 @@ const DoctorDashboard = () => {
                 </div>
                 <div class="details">
                   <p><strong>Bill ID:</strong> #${bill.billId}</p>
-                  <p><strong>Date:</strong> ${new Date(bill.paymentDate).toLocaleDateString()}</p>
+                  <p><strong>Date:</strong> ${billDate}</p>
                   <p><strong>Status:</strong> ${bill.status}</p>
                 </div>
               </div>
 
               <h3>Patient Information</h3>
               <p><strong>Name:</strong> ${patientName}</p>
-              <p><strong>Appointment ID:</strong> ${bill.appointment.id}</p>
+              <p><strong>Appointment ID:</strong> ${bill.appointment?.id || 'N/A'}</p>
 
               <table class="info-table">
                 <thead>
@@ -372,13 +366,13 @@ const DoctorDashboard = () => {
                 <tbody>
                   <tr>
                     <td>Medical Consultation & Services</td>
-                    <td style="text-align:right">Rs. ${bill.amount.toFixed(2)}</td>
+                    <td style="text-align:right">Rs. ${Number(bill.amount).toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>
 
               <div class="total">
-                Total: Rs. ${bill.amount.toFixed(2)}
+                Total: Rs. ${Number(bill.amount).toFixed(2)}
               </div>
 
               <div class="footer">
@@ -387,14 +381,15 @@ const DoctorDashboard = () => {
               </div>
             </div>
             <script>
-              window.onload = function() { window.print(); }
+              window.onload = function() { 
+                window.print(); 
+              }
             </script>
           </body>
         </html>
       `;
       printWindow.document.write(invoiceHTML);
       printWindow.document.close();
-    }
   };
 
   const sidebarColor = '#2E7D32'; 
