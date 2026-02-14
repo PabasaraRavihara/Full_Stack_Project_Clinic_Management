@@ -16,12 +16,19 @@ interface Patient {
   password?: string;
 }
 
+interface Doctor {
+  id: number;
+  name: string;
+  specialization: string;
+}
+
 interface Appointment {
   id: number;
   date: string;
   time: string;
   status: string;
   patient: Patient;
+  doctor: Doctor; // Doctor විස්තර මෙතනට එකතු කළා
 }
 
 interface MedicalRecord {
@@ -105,12 +112,17 @@ const DoctorDashboard = () => {
   const fetchData = async () => {
     try {
         const config = getAuthConfig();
+        const storedData = localStorage.getItem('doctorData');
+        if (!storedData) return;
+        const loggedInDoctor = JSON.parse(storedData); // ලොග් වී සිටින දොස්තර
 
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
         const aRes = await api.get('/appointments', config); 
-        setAppointmentsList(aRes.data);
+        // ✅ ලොග් වී සිටින දොස්තරගේ ID එකට පමණක් අදාල දත්ත පෙරීම (Fix)
+        const filteredAppts = aRes.data.filter((app: Appointment) => app.doctor?.id === loggedInDoctor.id);
+        setAppointmentsList(filteredAppts);
 
         const rRes = await api.get('/medical-records', config);
         setRecordsList(rRes.data);
@@ -280,7 +292,7 @@ const DoctorDashboard = () => {
           setBillingSubTab('view');
       } catch (error) { 
           console.error(error); // See exact error in console
-          alert("Error Saving Bill!"); 
+          alert("Error Saving Bill! Make sure the Appointment ID is correct."); 
       }
   };
 
@@ -305,7 +317,7 @@ const DoctorDashboard = () => {
       setBillingSubTab('add');
   };
 
-  // --- PRINT BILL (MODIFIED) ---
+  // --- PRINT BILL ---
   const printBill = (bill: Billing) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     
@@ -416,16 +428,14 @@ const DoctorDashboard = () => {
         <header className="dashboard-header"><h1>Doctor Dashboard</h1></header>
         <div className="dashboard-content-wrapper">
           
-          {/* 1. DASHBOARD OVERVIEW */}
           {activeTab === 'dashboard' && (
             <section className="dashboard-content">
               <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>Total Patients</h3><p style={{color: '#2E7D32', fontSize: '2.5rem'}}>{patientsList.length}</p></div>
-              <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>Appointments</h3><p style={{color: '#1565C0', fontSize: '2.5rem'}}>{appointmentsList.length}</p></div>
+              <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>My Appointments</h3><p style={{color: '#1565C0', fontSize: '2.5rem'}}>{appointmentsList.length}</p></div>
               <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>Income</h3><p style={{color: '#2E7D32', fontSize: '2.5rem'}}>Rs. {income}</p></div>
             </section>
           )}
 
-          {/* 2. PATIENTS TAB */}
           {activeTab === 'patients' && (
             <section className="doctors-section">
               <div className="action-buttons-container">
@@ -488,11 +498,10 @@ const DoctorDashboard = () => {
             </section>
           )}
 
-          {/* 3. APPOINTMENTS TAB */}
           {activeTab === 'appointments' && (
             <section className="doctors-section">
                <div className="table-container">
-                    <h3 style={{marginBottom:'15px', color:'#2E7D32'}}>Appointment Requests</h3>
+                    <h3 style={{marginBottom:'15px', color:'#2E7D32'}}>My Appointment Requests</h3>
                     <table className="data-table">
                         <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
@@ -525,7 +534,6 @@ const DoctorDashboard = () => {
             </section>
           )}
 
-          {/* 4. RECORDS & BILLING */}
           {activeTab === 'records' && (
             <section className="doctors-section">
                <div className="action-buttons-container">
