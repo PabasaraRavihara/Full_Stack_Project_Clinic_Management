@@ -101,6 +101,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<Appointment> getAllAppointments() {
+        // සියලුම ඇපොයින්මන්ට්ස් ලබාදේ. Frontend එකෙන් filtering සිදුකෙරේ.
         return appointmentRepository.findAll();
     }
 
@@ -111,6 +112,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<Appointment> getAppointmentsByDoctorId(Long doctorId) {
+        // විශේෂිත දොස්තරවරයාට පමණක් ඇපොයින්මන්ට්ස් ලබාදේ.
         return appointmentRepository.findByDoctorId(doctorId);
     }
 
