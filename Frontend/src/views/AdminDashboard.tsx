@@ -91,8 +91,8 @@ const AdminDashboard = () => {
   // Add doctor function
   const handleAddDoctor = async () => {
     try {
-      if(!newDoctor.name || !newDoctor.email || !newDoctor.password) {
-        alert("Please fill in required fields!");
+      if(!newDoctor.name || !newDoctor.email || !newDoctor.password || !newDoctor.phone || !newDoctor.experience || !newDoctor.specialization) {
+        alert("Please fill in ALL required fields (Name, Specialization, Email, Phone, Experience, Password)!");
         return;
       }
 
