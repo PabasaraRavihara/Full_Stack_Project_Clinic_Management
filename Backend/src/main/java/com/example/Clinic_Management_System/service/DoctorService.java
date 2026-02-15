@@ -26,4 +26,6 @@ public interface DoctorService {
     boolean emailExists(String email);
 
     Doctor createDoctor(Doctor doctor);
+
+    Doctor findByEmail(String email);
 }
