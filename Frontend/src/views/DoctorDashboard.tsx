@@ -120,36 +120,33 @@ const fetchData = async () => {
         const loggedInUser = JSON.parse(storedData);
        
         docId = loggedInUser.doctor?.id || loggedInUser.id || loggedInUser.doctorId;
+        console.log("Logged in Doctor ID:", docId); 
       } catch (e) { 
-        console.warn("Using plain token."); 
+        console.warn("Plain token found. ID cannot be extracted from local storage.");
       }
 
-    
       const pRes = await api.get('/patients', config);
       setPatientsList(pRes.data);
-
       const rRes = await api.get('/medical-records', config);
       setRecordsList(rRes.data);
-
       const bRes = await api.get('/billings', config);
       setBillingsList(bRes.data);
       setIncome(bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0));
 
+
       if (docId) {
-       
         const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
         setAppointmentsList(aRes.data);
       } else {
-       
-        const aRes = await api.get('/appointments', config); 
-        setAppointmentsList(aRes.data);
+ 
+        console.error("Doctor ID not found! Showing empty list for security.");
+        setAppointmentsList([]); 
       }
 
     } catch (err) { 
       console.error("Error fetching data:", err); 
     }
-  };
-
+};
   useEffect(() => {
     fetchData();
   }, [activeTab]);
