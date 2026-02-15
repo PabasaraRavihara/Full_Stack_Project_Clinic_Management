@@ -11,7 +11,7 @@ const DoctorLogin = () => {
   
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -23,7 +23,11 @@ const DoctorLogin = () => {
 
       if (response.status === 200) {
         console.log("Doctor Login Success!");
-        localStorage.setItem('doctorData', JSON.stringify(response.data));
+        
+
+        const token = response.data;
+        localStorage.setItem('doctorToken', token); 
+        
         navigate('/doctor-dashboard'); 
       }
     } catch (err) {
