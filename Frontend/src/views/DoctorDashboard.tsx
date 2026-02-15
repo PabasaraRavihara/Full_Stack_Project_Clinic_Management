@@ -118,9 +118,13 @@ const fetchData = async () => {
       let docId = null;
       try {
         const loggedInUser = JSON.parse(storedData);
+       
         docId = loggedInUser.doctor?.id || loggedInUser.id || loggedInUser.doctorId;
-      } catch (e) { console.warn("Using plain token."); }
+      } catch (e) { 
+        console.warn("Using plain token."); 
+      }
 
+    
       const pRes = await api.get('/patients', config);
       setPatientsList(pRes.data);
 
@@ -131,13 +135,19 @@ const fetchData = async () => {
       setBillingsList(bRes.data);
       setIncome(bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0));
 
-      // Doctor ID එක අනුව filter කිරීම
-      const aRes = docId 
-        ? await api.get(`/appointments/doctor/${docId}`, config) 
-        : await api.get('/appointments', config);
-      setAppointmentsList(aRes.data);
+      if (docId) {
+       
+        const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
+        setAppointmentsList(aRes.data);
+      } else {
+       
+        const aRes = await api.get('/appointments', config); 
+        setAppointmentsList(aRes.data);
+      }
 
-    } catch (err) { console.error("Error fetching data:", err); }
+    } catch (err) { 
+      console.error("Error fetching data:", err); 
+    }
   };
 
   useEffect(() => {
