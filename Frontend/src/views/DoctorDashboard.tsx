@@ -116,17 +116,15 @@ const DoctorDashboard = () => {
         if (!storedData) return;
 
         const loggedInUser = JSON.parse(storedData);
-        
-        // ✅ ඉතාම වැදගත් FIX එක:
-        // ඔබේ login response එක අනුව ID එක තිබෙන්නේ loggedInUser.doctor.id ලෙසයි
+        // localStorage එකෙන් එන දත්තවල ව්‍යුහය අනුව ID එක ලබා ගැනීම
         const docId = loggedInUser.doctor ? loggedInUser.doctor.id : loggedInUser.id; 
 
         // 1. Patients ලබා ගැනීම
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
+        // 2. ✅ Appointments ලබා ගැනීම (දොස්තරට අදාළ ඒවා පමණක් Backend එකෙන් ගනියි)
         if (docId) {
-            // 2. ✅ Appointments ලබා ගැනීම (දොස්තරට අදාළ ඒවා පමණක් Backend එකෙන් ගනියි)
             const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
             setAppointmentsList(aRes.data);
         }
@@ -141,7 +139,6 @@ const DoctorDashboard = () => {
         
         const total = bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0);
         setIncome(total);
-
     } catch (err) {
         console.error("Error fetching data:", err);
     }
@@ -281,12 +278,13 @@ const DoctorDashboard = () => {
       try {
           const config = getAuthConfig();
           
+          // FIX: Ensure values are Numbers
           const payload = { 
-              amount: Number(newBill.amount), 
+              amount: Number(newBill.amount),  // Convert to Number
               paymentMethod: newBill.paymentMethod, 
               status: newBill.status, 
               paymentDate: new Date().toISOString().slice(0, 19), 
-              appointment: { id: Number(newBill.appointmentId) } 
+              appointment: { id: Number(newBill.appointmentId) } // Convert to Number
           };
           
           if(isEditing && editingId) {
@@ -300,8 +298,8 @@ const DoctorDashboard = () => {
           fetchData();
           setBillingSubTab('view');
       } catch (error) { 
-          console.error(error); 
-          alert("Error Saving Bill!"); 
+          console.error(error); // See exact error in console
+          alert("Error Saving Bill! Make sure the Appointment ID is correct."); 
       }
   };
 
@@ -329,12 +327,88 @@ const DoctorDashboard = () => {
   // --- PRINT BILL ---
   const printBill = (bill: Billing) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) return;
-    const patientName = bill.appointment?.patient ? `${bill.appointment.patient.firstName} ${bill.appointment.patient.lastName}` : "Unknown Patient";
+    
+    if (!printWindow) {
+      alert("Please allow popups to print the bill!");
+      return;
+    }
+
+    const patientName = bill.appointment?.patient 
+      ? `${bill.appointment.patient.firstName} ${bill.appointment.patient.lastName}` 
+      : "Unknown Patient";
+      
     const billDate = new Date(bill.paymentDate).toLocaleDateString();
-    const invoiceHTML = `<html><body><h2>Healthcare+ Bill</h2><p>Amount: Rs. ${bill.amount}</p><script>window.print();</script></body></html>`;
-    printWindow.document.write(invoiceHTML);
-    printWindow.document.close();
+
+    const invoiceHTML = `
+        <html>
+          <head>
+            <title>Invoice #${bill.billId}</title>
+            <style>
+              body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; }
+              .invoice-box { max-width: 800px; margin: auto; border: 1px solid #eee; padding: 30px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); }
+              .header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+              .logo h1 { color: #2E7D32; margin: 0; }
+              .details { text-align: right; }
+              .info-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              .info-table th { background: #f9f9f9; padding: 10px; text-align: left; }
+              .info-table td { padding: 10px; border-bottom: 1px solid #eee; }
+              .total { margin-top: 30px; text-align: right; font-size: 1.5rem; font-weight: bold; color: #2E7D32; }
+              .footer { margin-top: 50px; text-align: center; font-size: 0.8rem; color: #777; }
+              @media print { .no-print { display: none; } }
+            </style>
+          </head>
+          <body>
+            <div class="invoice-box">
+              <div class="header">
+                <div class="logo">
+                  <h1>HealthCare+ Clinic</h1>
+                  <p>No 123, Wellness Road, Colombo</p>
+                </div>
+                <div class="details">
+                  <p><strong>Bill ID:</strong> #${bill.billId}</p>
+                  <p><strong>Date:</strong> ${billDate}</p>
+                  <p><strong>Status:</strong> ${bill.status}</p>
+                </div>
+              </div>
+
+              <h3>Patient Information</h3>
+              <p><strong>Name:</strong> ${patientName}</p>
+              <p><strong>Appointment ID:</strong> ${bill.appointment?.id || 'N/A'}</p>
+
+              <table class="info-table">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th style="text-align:right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Medical Consultation & Services</td>
+                    <td style="text-align:right">Rs. ${Number(bill.amount).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="total">
+                Total: Rs. ${Number(bill.amount).toFixed(2)}
+              </div>
+
+              <div class="footer">
+                <p>Thank you for choosing HealthCare+!</p>
+                <p>This is a computer-generated invoice.</p>
+              </div>
+            </div>
+            <script>
+              window.onload = function() { 
+                window.print(); 
+              }
+            </script>
+          </body>
+        </html>
+      `;
+      printWindow.document.write(invoiceHTML);
+      printWindow.document.close();
   };
 
   const sidebarColor = '#2E7D32'; 
@@ -383,9 +457,14 @@ const DoctorDashboard = () => {
                         <tbody>
                             {patientsList.map(p => (
                                 <tr key={p.id}>
-                                    <td>{p.id}</td><td>{p.firstName} {p.lastName}</td><td>{p.email}</td><td>{p.phone}</td>
-                                    <td><button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditPatient(p)}>Edit</button>
-                                    <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeletePatient(p.id!)}>Delete</button></td>
+                                    <td>{p.id}</td>
+                                    <td>{p.firstName} {p.lastName}</td>
+                                    <td>{p.email}</td>
+                                    <td>{p.phone}</td>
+                                    <td>
+                                        <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditPatient(p)}>Edit</button>
+                                        <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeletePatient(p.id!)}>Delete</button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -393,10 +472,33 @@ const DoctorDashboard = () => {
                   </div>
               ) : (
                   <div className="form-container">
+                      <h3>{isEditing ? 'Edit Patient' : 'Register New Patient'}</h3>
                       <form className="admin-form">
-                          <input placeholder="First Name" value={newPatient.firstName} onChange={e => setNewPatient({...newPatient, firstName: e.target.value})} /><br/>
-                          <input placeholder="Last Name" value={newPatient.lastName} onChange={e => setNewPatient({...newPatient, lastName: e.target.value})} /><br/>
-                          <button type="button" className="save-btn" onClick={handleSavePatient}>Save</button>
+                          <div className="form-row">
+                              <div className="form-group"><label>First Name</label><input value={newPatient.firstName} onChange={e => setNewPatient({...newPatient, firstName: e.target.value})}/></div>
+                              <div className="form-group"><label>Last Name</label><input value={newPatient.lastName} onChange={e => setNewPatient({...newPatient, lastName: e.target.value})}/></div>
+                          </div>
+                          <div className="form-row">
+                              <div className="form-group"><label>Email</label><input value={newPatient.email} onChange={e => setNewPatient({...newPatient, email: e.target.value})}/></div>
+                              <div className="form-group"><label>Phone</label><input value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})}/></div>
+                          </div>
+                          <div className="form-row">
+                              <div className="form-group"><label>Age</label><input value={newPatient.age} onChange={e => setNewPatient({...newPatient, age: e.target.value})}/></div>
+                              <div className="form-group"><label>Gender</label><input value={newPatient.gender} onChange={e => setNewPatient({...newPatient, gender: e.target.value})}/></div>
+                          </div>
+                          <div className="form-group"><label>Address</label><input value={newPatient.address} onChange={e => setNewPatient({...newPatient, address: e.target.value})}/></div>
+                          
+                          <div className="form-group">
+                              <label>Password</label>
+                              <input 
+                                  type="text" 
+                                  placeholder={isEditing ? "Leave blank to keep current" : "Set Password"} 
+                                  value={newPatient.password || ''} 
+                                  onChange={e => setNewPatient({...newPatient, password: e.target.value})}
+                              />
+                          </div>
+
+                          <button type="button" className="save-btn" onClick={handleSavePatient}>{isEditing ? 'Update Patient' : 'Save Patient'}</button>
                       </form>
                   </div>
               )}
@@ -410,17 +512,26 @@ const DoctorDashboard = () => {
                     <table className="data-table">
                         <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
+                            {/* ✅ Appointment mapping එක නිවැරදි කළා */}
                             {appointmentsList.map(a => (
                                 <tr key={a.id}>
-                                    <td>{a.id}</td><td>{a.date}</td><td>{a.time}</td>
-                                    <td>{a.patient ? a.patient.firstName : 'Unknown'}</td>
-                                    <td><span style={{fontWeight:'bold', color: a.status === 'PENDING' ? 'orange' : 'green'}}>{a.status}</span></td>
+                                    <td>{a.id}</td>
+                                    <td>{a.date}</td>
+                                    <td>{a.time}</td>
+                                    <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
                                     <td>
-                                        {a.status === 'PENDING' && (
+                                        <span style={{fontWeight:'bold', color: a.status === 'PENDING' ? 'orange' : a.status === 'APPROVED' ? 'green' : 'red'}}>
+                                            {a.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {a.status === 'PENDING' ? (
                                             <>
                                                 <button style={{...btnStyle, background:'#28a745'}} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
                                                 <button style={{...btnStyle, background:'#dc3545'}} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
                                             </>
+                                        ) : (
+                                            <span style={{fontSize:'0.8rem', color:'#777'}}>Action Taken</span>
                                         )}
                                     </td>
                                 </tr>
@@ -437,22 +548,47 @@ const DoctorDashboard = () => {
                    <button className={`action-btn ${recordSubTab === 'view' ? 'active' : ''}`} onClick={() => {setRecordSubTab('view'); resetForms();}}>View List</button>
                    <button className={`action-btn ${recordSubTab === 'add' ? 'active' : ''}`} onClick={() => {setRecordSubTab('add'); resetForms();}}>Add Record</button>
                </div>
+               
                {recordSubTab === 'view' ? (
-                   <table className="data-table">
-                       <thead><tr><th>Date</th><th>Patient</th><th>Diagnosis</th><th>Actions</th></tr></thead>
-                       <tbody>
-                           {recordsList.map(r => (
-                               <tr key={r.id}>
-                                   <td>{r.recordDate}</td><td>{r.patient?.firstName}</td><td>{r.diagnosis}</td>
-                                   <td><button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteRecord(r.id)}>Delete</button></td>
-                               </tr>
-                           ))}
-                       </tbody>
-                   </table>
+                   <div className="table-container">
+                       <table className="data-table">
+                           <thead><tr><th>Date</th><th>Patient</th><th>Diagnosis</th><th>Actions</th></tr></thead>
+                           <tbody>
+                               {recordsList.map(r => (
+                                   <tr key={r.id}>
+                                       <td>{r.recordDate}</td>
+                                       <td>{r.patient ? r.patient.firstName : 'N/A'}</td>
+                                       <td>{r.diagnosis}</td>
+                                       <td>
+                                           {/* ✅ Edit Button එක එකතු කළා */}
+                                           <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditRecord(r)}>Edit</button>
+                                           <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteRecord(r.id)}>Delete</button>
+                                       </td>
+                                   </tr>
+                               ))}
+                           </tbody>
+                       </table>
+                   </div>
                ) : (
                    <div className="form-container">
-                       <input placeholder="Patient ID" onChange={e => setNewRecord({...newRecord, patientId: e.target.value})} /><br/>
-                       <button className="save-btn" onClick={handleSaveRecord}>Save</button>
+                       <h3>{isEditing ? 'Edit Medical Record' : 'Add Medical Record'}</h3>
+                       <form className="admin-form">
+                           <div className="form-group"><label>Patient ID</label><input type="number" value={newRecord.patientId} onChange={e => setNewRecord({...newRecord, patientId: e.target.value})} /></div>
+                           <div className="form-group"><label>Doctor ID</label><input type="number" value={newRecord.doctorId} onChange={e => setNewRecord({...newRecord, doctorId: e.target.value})} /></div>
+                           
+                           <div className="form-group">
+                               <label>Record Date</label>
+                               <input 
+                                   type="date" 
+                                   value={newRecord.recordDate} 
+                                   onChange={e => setNewRecord({...newRecord, recordDate: e.target.value})} 
+                               />
+                           </div>
+
+                           <div className="form-group"><label>Diagnosis</label><input value={newRecord.diagnosis} onChange={e => setNewRecord({...newRecord, diagnosis: e.target.value})} /></div>
+                           <div className="form-group"><label>Treatment</label><input value={newRecord.treatment} onChange={e => setNewRecord({...newRecord, treatment: e.target.value})} /></div>
+                           <button type="button" className="save-btn" style={{background:'#2E7D32'}} onClick={handleSaveRecord}>{isEditing ? 'Update Record' : 'Save Record'}</button>
+                       </form>
                    </div>
                )}
             </section>
@@ -465,21 +601,35 @@ const DoctorDashboard = () => {
                     <button className={`action-btn ${billingSubTab === 'add' ? 'active' : ''}`} onClick={() => {setBillingSubTab('add'); resetForms();}}>Create Bill</button>
                 </div>
                 {billingSubTab === 'view' ? (
-                    <table className="data-table">
-                        <thead><tr><th>Bill ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
-                        <tbody>
-                            {billingsList.map(b => (
-                                <tr key={b.billId}>
-                                    <td>{b.billId}</td><td>Rs. {b.amount}</td><td>{b.status}</td>
-                                    <td><button style={{...btnStyle, background:'#007BFF'}} onClick={() => printBill(b)}>Print</button></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <div className="table-container">
+                        <table className="data-table">
+                            <thead><tr><th>Bill ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                {billingsList.map(b => (
+                                    <tr key={b.billId}>
+                                        <td>{b.billId}</td>
+                                        <td>Rs. {b.amount}</td>
+                                        <td>{b.status}</td>
+                                        <td>
+                                            <button style={{...btnStyle, background:'#007BFF'}} onClick={() => printBill(b)}>Print</button>
+                                            {/* ✅ Edit සහ Delete Button එකතු කළා */}
+                                            <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditBill(b)}>Edit</button>
+                                            <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteBill(b.billId)}>Delete</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 ) : (
                     <div className="form-container">
-                        <input placeholder="Appt ID" type="number" onChange={e=>setNewBill({...newBill, appointmentId: e.target.value})}/><br/>
-                        <button className="save-btn" onClick={handleSaveBill}>Generate</button>
+                        <h3>{isEditing ? 'Edit Bill' : 'Create Bill'}</h3>
+                        <form className="admin-form">
+                            <div className="form-group"><label>Appt ID</label><input type="number" value={newBill.appointmentId} onChange={e=>setNewBill({...newBill, appointmentId: e.target.value})}/></div>
+                            <div className="form-group"><label>Amount</label><input type="number" value={newBill.amount} onChange={e=>setNewBill({...newBill, amount: e.target.value})}/></div>
+                            <div className="form-group"><label>Status</label><input type="text" value={newBill.status} onChange={e=>setNewBill({...newBill, status: e.target.value})}/></div>
+                            <button type="button" className="save-btn" onClick={handleSaveBill}>{isEditing ? 'Update' : 'Generate Bill'}</button>
+                        </form>
                     </div>
                 )}
             </section>
