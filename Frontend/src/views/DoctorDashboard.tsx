@@ -268,27 +268,35 @@ const handleSaveRecord = async () => {
   };
 
   // --- ACTIONS: BILLING (FIXED) ---
- const handleSaveBill = async () => {
+const handleSaveBill = async () => {
     try {
-      const config = getAuthConfig();
-      const payload = { 
-        amount: Number(newBill.amount), // String to Number convert
-        paymentMethod: newBill.paymentMethod, 
-        status: newBill.status, 
-        paymentDate: new Date().toISOString().slice(0, 19), 
-        appointment: { id: Number(newBill.appointmentId) } // String to Number convert
-      };
-      
-      if(isEditing && editingId) {
-        await api.put(`/billings/${editingId}`, payload, config);
-        alert("Bill Updated!");
-      } else {
-        await api.post('/billings', payload, config);
-        alert("Bill Created!");
-      }
-      resetForms(); fetchData(); setBillingSubTab('view');
-    } catch (error) { alert("Error Saving Bill! Check Appt ID."); }
-  };
+        const config = getAuthConfig();
+        
+        // Backend එක බලාපොරොත්තු වන නිවැරදි JSON ව්‍යුහය
+        const payload = { 
+            billId: editingId, // PUT එකේදී ID එක Payload එක තුළත් තිබීම වඩාත් සුදුසුයි
+            amount: Number(newBill.amount), 
+            paymentMethod: newBill.paymentMethod, 
+            status: newBill.status, 
+            paymentDate: new Date().toISOString().slice(0, 19).replace('T', ' '), // "yyyy-MM-dd HH:mm:ss" format එකට
+            appointment: { id: Number(newBill.appointmentId) } 
+        };
+        
+        if(isEditing && editingId) {
+            // PUT request එක
+            await api.put(`/billings/${editingId}`, payload, config);
+            alert("Bill Updated Successfully!");
+        } else {
+            // POST request එක
+            await api.post('/billings', payload, config);
+            alert("Bill Created Successfully!");
+        }
+        resetForms(); fetchData(); setBillingSubTab('view');
+    } catch (error) { 
+        console.error("Billing Error Details:", error);
+        alert("Error Saving Bill! Please check Appointment ID."); 
+    }
+};
   const handleDeleteBill = async (id: number) => {
       if(!window.confirm("Delete this bill?")) return;
       try {
