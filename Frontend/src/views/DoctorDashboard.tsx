@@ -108,7 +108,7 @@ const DoctorDashboard = () => {
       };
   };
 
-  // --- API Calls (Fetch Data) ---
+ // --- API Calls (Fetch Data) ---
   const fetchData = async () => {
     try {
         const config = getAuthConfig();
@@ -116,17 +116,28 @@ const DoctorDashboard = () => {
         if (!storedData) return;
 
         const loggedInUser = JSON.parse(storedData);
-        // localStorage එකෙන් එන දත්තවල ව්‍යුහය අනුව ID එක ලබා ගැනීම
-        const docId = loggedInUser.doctor ? loggedInUser.doctor.id : loggedInUser.id; 
+        
+        // ✅ දත්ත එන්නේ loggedInUser.doctor.id ලෙස ද නැත්නම් loggedInUser.id ලෙස ද කියා පරීක්ෂා කරයි
+        let docId = null;
+        if (loggedInUser?.doctor?.id) {
+          docId = loggedInUser.doctor.id;
+        } else if (loggedInUser?.id) {
+          docId = loggedInUser.id;
+        }
+
+        console.log("Current Doctor ID:", docId); 
 
         // 1. Patients ලබා ගැනීම
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        // 2. ✅ Appointments ලබා ගැනීම (දොස්තරට අදාළ ඒවා පමණක් Backend එකෙන් ගනියි)
+        // 2. Appointments ලබා ගැනීම (ID එක තිබේ නම් පමණක්)
         if (docId) {
             const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
+            console.log("Appointments found:", aRes.data);
             setAppointmentsList(aRes.data);
+        } else {
+            console.error("Doctor ID missing from LocalStorage!");
         }
 
         // 3. Records ලබා ගැනීම
@@ -139,6 +150,7 @@ const DoctorDashboard = () => {
         
         const total = bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0);
         setIncome(total);
+
     } catch (err) {
         console.error("Error fetching data:", err);
     }
