@@ -109,6 +109,7 @@ const DoctorDashboard = () => {
   };
 
 // --- API Calls (Fetch Data) ---
+// ✅ Update 1: Doctor ID Filter එක සහිත fetchData
   const fetchData = async () => {
     try {
         const config = getAuthConfig();
@@ -119,16 +120,23 @@ const DoctorDashboard = () => {
             return;
         }
 
-
+        const loggedInUser = JSON.parse(storedData);
         
+        // ලොගින් වුණු දොස්තරගේ ID එක සොයා ගැනීම
+        const docId = loggedInUser.doctor?.id || loggedInUser.id || loggedInUser.doctorId; 
+
         // 1. Patients ලබා ගැනීම
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        // 2. Appointments
-    
-        const aRes = await api.get('/appointments', config); 
-        setAppointmentsList(aRes.data);
+        // 2. Appointments (ID එකක් තිබේ නම් අදාළ දොස්තරට පමණක් පෙන්වයි)
+        if (docId) {
+            const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
+            setAppointmentsList(aRes.data);
+        } else {
+            const aRes = await api.get('/appointments', config); 
+            setAppointmentsList(aRes.data);
+        }
 
         // 3. Records
         const rRes = await api.get('/medical-records', config);
@@ -227,25 +235,28 @@ const DoctorDashboard = () => {
   };
 
   // --- ACTIONS: RECORDS ---
+  // ✅ Update 2: Record Update එකේදී Patient Name "N/A" වීම වැළැක්වීම
   const handleSaveRecord = async () => {
     try { 
         const config = getAuthConfig();
-        
         const payload = {
-            ...newRecord,
-            recordDate: newRecord.recordDate ? newRecord.recordDate : new Date().toISOString().split('T')[0]
+            diagnosis: newRecord.diagnosis,
+            treatment: newRecord.treatment,
+            notes: newRecord.notes,
+            recordDate: newRecord.recordDate || new Date().toISOString().split('T')[0],
+            // වැදගත්: Patient ID එක Object එකක් ලෙස යැවිය යුතුය
+            patient: { id: Number(newRecord.patientId) },
+            doctor: { id: 1 } 
         };
 
         if (isEditing && editingId) {
-            await api.put(`/medical-records/${editingId}`, payload, config); 
-            alert("Record Updated!"); 
+            await api.put(`/medical-records/${editingId}`, payload, config);
+            alert("Record Updated!");
         } else {
-            await api.post('/medical-records', payload, config); 
-            alert("Record Added!"); 
+            await api.post('/medical-records', payload, config);
+            alert("Record Added!");
         }
-        resetForms(); 
-        fetchData(); 
-        setRecordSubTab('view'); 
+        resetForms(); fetchData(); setRecordSubTab('view');
     } catch (err) { 
         console.error(err);
         alert("Error Saving Record!"); 
@@ -276,6 +287,7 @@ const DoctorDashboard = () => {
   };
 
   // --- ACTIONS: BILLING (FIXED) ---
+  // ✅ Update 3: Billing Edit Error එක විසඳීම (Type Casting)
   const handleSaveBill = async () => {
       try {
           const config = getAuthConfig();
@@ -301,7 +313,7 @@ const DoctorDashboard = () => {
           setBillingSubTab('view');
       } catch (error) { 
           console.error(error); // See exact error in console
-          alert("Error Saving Bill! Make sure the Appointment ID is correct."); 
+          alert("Error Saving Bill! Check Appt ID."); 
       }
   };
 
@@ -514,7 +526,6 @@ const DoctorDashboard = () => {
                     <table className="data-table">
                         <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
-                            {/* ✅ Appointment mapping එක නිවැරදි කළා */}
                             {appointmentsList.map(a => (
                                 <tr key={a.id}>
                                     <td>{a.id}</td>
@@ -562,7 +573,6 @@ const DoctorDashboard = () => {
                                        <td>{r.patient ? r.patient.firstName : 'N/A'}</td>
                                        <td>{r.diagnosis}</td>
                                        <td>
-                                           {/* ✅ Edit Button එක එකතු කළා */}
                                            <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditRecord(r)}>Edit</button>
                                            <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteRecord(r.id)}>Delete</button>
                                        </td>
@@ -614,7 +624,6 @@ const DoctorDashboard = () => {
                                         <td>{b.status}</td>
                                         <td>
                                             <button style={{...btnStyle, background:'#007BFF'}} onClick={() => printBill(b)}>Print</button>
-                                            {/* ✅ Edit සහ Delete Button එකතු කළා */}
                                             <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditBill(b)}>Edit</button>
                                             <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteBill(b.billId)}>Delete</button>
                                         </td>
