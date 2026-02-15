@@ -110,44 +110,27 @@ const DoctorDashboard = () => {
 
 // --- API Calls (Fetch Data) ---
 // ✅ Update 1: Doctor ID Filter එක සහිත fetchData
-  const fetchData = async () => {
+const fetchData = async () => {
     try {
         const config = getAuthConfig();
-        const storedData = localStorage.getItem('doctorData');
         
-        if (!storedData) {
-            console.error("No data in LocalStorage!");
-            return;
-        }
-
-        const loggedInUser = JSON.parse(storedData);
-        
-        // ලොගින් වුණු දොස්තරගේ ID එක සොයා ගැනීම
-        const docId = loggedInUser.doctor?.id || loggedInUser.id || loggedInUser.doctorId; 
-
-        // 1. Patients ලබා ගැනීම
+        // 1. Patients ලබා ගැනීම (ID එක නැතත් මේවා පේන්න ඕනේ)
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        // 2. Appointments (ID එකක් තිබේ නම් අදාළ දොස්තරට පමණක් පෙන්වයි)
-        if (docId) {
-            const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
-            setAppointmentsList(aRes.data);
-        } else {
-            const aRes = await api.get('/appointments', config); 
-            setAppointmentsList(aRes.data);
-        }
-
-        // 3. Records
+        // 2. Records ලබා ගැනීම
         const rRes = await api.get('/medical-records', config);
         setRecordsList(rRes.data);
 
-        // 4. Billings
+        // 3. Billings ලබා ගැනීම
         const bRes = await api.get('/billings', config);
         setBillingsList(bRes.data);
-        
-        const total = bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0);
-        setIncome(total);
+        setIncome(bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0));
+
+        // 4. Appointments ලබා ගැනීම
+        // Token එක විතරක් එන නිසා JSON.parse එකෙන් Error එන එක වැළැක්වීමට කෙලින්ම appointments ගෙන්වමු
+        const aRes = await api.get('/appointments', config); 
+        setAppointmentsList(aRes.data);
 
     } catch (err) {
         console.error("Error fetching data:", err);
