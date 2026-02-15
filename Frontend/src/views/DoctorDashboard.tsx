@@ -116,15 +116,17 @@ const fetchData = async () => {
       if (!storedData) return;
 
       let docId = null;
+
       try {
-        const loggedInUser = JSON.parse(storedData);
+        const parsed = JSON.parse(storedData);
+      
+        docId = parsed.doctor?.id || parsed.id || parsed.doctorId;
+      } catch (e) {
        
-        docId = loggedInUser.doctor?.id || loggedInUser.id || loggedInUser.doctorId;
-        console.log("Logged in Doctor ID:", docId); 
-      } catch (e) { 
-        console.warn("Plain token found. ID cannot be extracted from local storage.");
+        console.warn("Plain token found. ID extraction from storage failed.");
       }
 
+     
       const pRes = await api.get('/patients', config);
       setPatientsList(pRes.data);
       const rRes = await api.get('/medical-records', config);
@@ -133,14 +135,16 @@ const fetchData = async () => {
       setBillingsList(bRes.data);
       setIncome(bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0));
 
-
+     
       if (docId) {
+        console.log("Fetching appointments for Doctor ID:", docId);
         const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
         setAppointmentsList(aRes.data);
       } else {
- 
-        console.error("Doctor ID not found! Showing empty list for security.");
-        setAppointmentsList([]); 
+      
+        console.warn("Doctor ID not found in storage. Showing all appointments as fallback.");
+        const aRes = await api.get('/appointments', config); 
+        setAppointmentsList(aRes.data);
       }
 
     } catch (err) { 
