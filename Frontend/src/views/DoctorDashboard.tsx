@@ -109,32 +109,35 @@ const DoctorDashboard = () => {
   };
 
 // --- API Calls (Fetch Data) ---
-// ✅ Update 1: Doctor ID Filter එක සහිත fetchData
 const fetchData = async () => {
     try {
-        const config = getAuthConfig();
-        
-        // 1. Patients ලබා ගැනීම (ID එක නැතත් මේවා පේන්න ඕනේ)
-        const pRes = await api.get('/patients', config);
-        setPatientsList(pRes.data);
+      const config = getAuthConfig();
+      const storedData = localStorage.getItem('doctorData');
+      if (!storedData) return;
 
-        // 2. Records ලබා ගැනීම
-        const rRes = await api.get('/medical-records', config);
-        setRecordsList(rRes.data);
+      let docId = null;
+      try {
+        const loggedInUser = JSON.parse(storedData);
+        docId = loggedInUser.doctor?.id || loggedInUser.id || loggedInUser.doctorId;
+      } catch (e) { console.warn("Using plain token."); }
 
-        // 3. Billings ලබා ගැනීම
-        const bRes = await api.get('/billings', config);
-        setBillingsList(bRes.data);
-        setIncome(bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0));
+      const pRes = await api.get('/patients', config);
+      setPatientsList(pRes.data);
 
-        // 4. Appointments ලබා ගැනීම
-        // Token එක විතරක් එන නිසා JSON.parse එකෙන් Error එන එක වැළැක්වීමට කෙලින්ම appointments ගෙන්වමු
-        const aRes = await api.get('/appointments', config); 
-        setAppointmentsList(aRes.data);
+      const rRes = await api.get('/medical-records', config);
+      setRecordsList(rRes.data);
 
-    } catch (err) {
-        console.error("Error fetching data:", err);
-    }
+      const bRes = await api.get('/billings', config);
+      setBillingsList(bRes.data);
+      setIncome(bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0));
+
+      // Doctor ID එක අනුව filter කිරීම
+      const aRes = docId 
+        ? await api.get(`/appointments/doctor/${docId}`, config) 
+        : await api.get('/appointments', config);
+      setAppointmentsList(aRes.data);
+
+    } catch (err) { console.error("Error fetching data:", err); }
   };
 
   useEffect(() => {
@@ -219,31 +222,26 @@ const fetchData = async () => {
 
   // --- ACTIONS: RECORDS ---
   // ✅ Update 2: Record Update එකේදී Patient Name "N/A" වීම වැළැක්වීම
-  const handleSaveRecord = async () => {
+const handleSaveRecord = async () => {
     try { 
-        const config = getAuthConfig();
-        const payload = {
-            diagnosis: newRecord.diagnosis,
-            treatment: newRecord.treatment,
-            notes: newRecord.notes,
-            recordDate: newRecord.recordDate || new Date().toISOString().split('T')[0],
-            // වැදගත්: Patient ID එක Object එකක් ලෙස යැවිය යුතුය
-            patient: { id: Number(newRecord.patientId) },
-            doctor: { id: 1 } 
-        };
+      const config = getAuthConfig();
+      const payload = {
+        diagnosis: newRecord.diagnosis,
+        treatment: newRecord.treatment,
+        notes: newRecord.notes,
+        recordDate: newRecord.recordDate || new Date().toISOString().split('T')[0],
+        patient: { id: Number(newRecord.patientId) } // නම N/A වීම වැළැක්වීමට
+      };
 
-        if (isEditing && editingId) {
-            await api.put(`/medical-records/${editingId}`, payload, config);
-            alert("Record Updated!");
-        } else {
-            await api.post('/medical-records', payload, config);
-            alert("Record Added!");
-        }
-        resetForms(); fetchData(); setRecordSubTab('view');
-    } catch (err) { 
-        console.error(err);
-        alert("Error Saving Record!"); 
-    }
+      if (isEditing && editingId) {
+        await api.put(`/medical-records/${editingId}`, payload, config);
+        alert("Record Updated!");
+      } else {
+        await api.post('/medical-records', payload, config);
+        alert("Record Added!");
+      }
+      resetForms(); fetchData(); setRecordSubTab('view');
+    } catch (err) { alert("Error Saving Record!"); }
   };
 
   const handleDeleteRecord = async (id: number) => {
@@ -270,36 +268,27 @@ const fetchData = async () => {
   };
 
   // --- ACTIONS: BILLING (FIXED) ---
-  // ✅ Update 3: Billing Edit Error එක විසඳීම (Type Casting)
-  const handleSaveBill = async () => {
-      try {
-          const config = getAuthConfig();
-          
-          // FIX: Ensure values are Numbers
-          const payload = { 
-              amount: Number(newBill.amount),  // Convert to Number
-              paymentMethod: newBill.paymentMethod, 
-              status: newBill.status, 
-              paymentDate: new Date().toISOString().slice(0, 19), 
-              appointment: { id: Number(newBill.appointmentId) } // Convert to Number
-          };
-          
-          if(isEditing && editingId) {
-             await api.put(`/billings/${editingId}`, payload, config);
-             alert("Bill Updated!");
-          } else {
-             await api.post('/billings', payload, config);
-             alert("Bill Created!");
-          }
-          resetForms();
-          fetchData();
-          setBillingSubTab('view');
-      } catch (error) { 
-          console.error(error); // See exact error in console
-          alert("Error Saving Bill! Check Appt ID."); 
+ const handleSaveBill = async () => {
+    try {
+      const config = getAuthConfig();
+      const payload = { 
+        amount: Number(newBill.amount), // String to Number convert
+        paymentMethod: newBill.paymentMethod, 
+        status: newBill.status, 
+        paymentDate: new Date().toISOString().slice(0, 19), 
+        appointment: { id: Number(newBill.appointmentId) } // String to Number convert
+      };
+      
+      if(isEditing && editingId) {
+        await api.put(`/billings/${editingId}`, payload, config);
+        alert("Bill Updated!");
+      } else {
+        await api.post('/billings', payload, config);
+        alert("Bill Created!");
       }
+      resetForms(); fetchData(); setBillingSubTab('view');
+    } catch (error) { alert("Error Saving Bill! Check Appt ID."); }
   };
-
   const handleDeleteBill = async (id: number) => {
       if(!window.confirm("Delete this bill?")) return;
       try {
