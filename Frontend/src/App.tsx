@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate ,useLocation } from 'react-router-dom';
 import './App.css';
 
 // Import Types
@@ -17,6 +18,7 @@ import DoctorDashboard from './views/DoctorDashboard.tsx';
 import AdminLogin from './views/AdminLogIn.tsx';
 import AdminDashboard from './views/AdminDashboard.tsx';
 import Home from './views/Home.tsx'; 
+
 
 // Auth Layout Wrapper 
 const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, activeTab: string }) => {
@@ -105,48 +107,55 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
 
 // Main App Component 
 function App() {
-  
-  // Navigation
-  const AuthRoute = ({ component: Component, mode }: { component: any, mode: ViewMode }) => {
-      const navigate = useNavigate();
-      
-      const handleSetViewMode = (newMode: ViewMode) => {
-          if (newMode === 'patientSignIn') navigate('/patient-login');
-          if (newMode === 'patientSignUp') navigate('/patient-signup');
-          if (newMode === 'doctorLogin') navigate('/doctor-login');
-          if (newMode === 'adminLogin') navigate('/admin-login');
-      };
+  return (
+    <BrowserRouter>
+      {/* 1. Animated Routes Wrapper  */}
+      <AnimatedRoutes />
+    </BrowserRouter>
+  );
+}
 
-      return (
-          <AuthLayout activeTab={mode}>
-              <Component setViewMode={handleSetViewMode} />
-          </AuthLayout>
-      );
+
+const AnimatedRoutes = () => {
+  const location = useLocation(); 
+  const navigate = useNavigate();
+
+  // Navigation Logic 
+  const AuthRoute = ({ component: Component, mode }: { component: any, mode: ViewMode }) => {
+    const handleSetViewMode = (newMode: ViewMode) => {
+      if (newMode === 'patientSignIn') navigate('/patient-login');
+      if (newMode === 'patientSignUp') navigate('/patient-signup');
+      if (newMode === 'doctorLogin') navigate('/doctor-login');
+      if (newMode === 'adminLogin') navigate('/admin-login');
+    };
+
+    return (
+      <AuthLayout activeTab={mode}>
+        <Component setViewMode={handleSetViewMode} />
+      </AuthLayout>
+    );
   };
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* --- HOME ROUTE --- */}
+    
+    <AnimatePresence mode="wait">
+      {/* 2. Routes  */}
+      <Routes location={location} key={location.pathname}>
         <Route path="/home" element={<Home />} />
-        
-        {/* --- AUTH ROUTES  --- */}
         <Route path="/patient-login" element={<AuthRoute component={PatientSignIn} mode="patientSignIn" />} />
         <Route path="/patient-signup" element={<AuthRoute component={PatientSignUp} mode="patientSignUp" />} />
         <Route path="/doctor-login" element={<AuthRoute component={DoctorLogin} mode="doctorLogin" />} />
         <Route path="/admin-login" element={<AuthRoute component={AdminLogin} mode="adminLogin" />} />
 
-        {/* --- DASHBOARD ROUTES --- */}
         <Route path="/patient-dashboard" element={<PatientDashboard />} />
         <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
-        {/* --- DEFAULT --- */}
         <Route path="/" element={<Navigate to="/home" />} />
         <Route path="*" element={<Navigate to="/home" />} />
       </Routes>
-    </BrowserRouter>
+    </AnimatePresence>
   );
-}
+};
 
 export default App;

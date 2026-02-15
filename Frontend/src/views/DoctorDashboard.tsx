@@ -89,7 +89,10 @@ const DoctorDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('doctorData');
+    localStorage.removeItem('token');
+    setTimeout(() => {
     navigate('/doctor-login');
+    }, 500);
   };
 
   // ✅ HELPER: Token Extraction
@@ -440,6 +443,7 @@ const handleSaveBill = async () => {
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
+      exit={{ opacity: 0, transition: { duration: 0.5 } }}
       className="dashboard-layout"
     >
       {/* --- SIDEBAR () --- */}
