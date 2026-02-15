@@ -85,4 +85,8 @@ public class DoctorServiceImpl implements DoctorService {
         doctor.setPassword(passwordEncoder.encode(doctor.getPassword()));
         return doctorRepo.save(doctor);
     }
+    @Override
+public Doctor findByEmail(String email) {
+    return doctorRepository.findByEmail(email).orElse(null);
+}
 }
