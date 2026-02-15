@@ -116,22 +116,15 @@ const DoctorDashboard = () => {
         if (!storedData) return;
 
         const loggedInUser = JSON.parse(storedData);
-        // localStorage එකෙන් එන දත්තවල ව්‍යුහය (Structure) අනුව ID එක නිවැරදිව ලබා ගැනීම
+        // localStorage එකෙන් එන දත්තවල ව්‍යුහය අනුව ID එක ලබා ගැනීම
         const docId = loggedInUser.id; 
 
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        // 1. Appointments ලබා ගැනීම
-        const aRes = await api.get('/appointments', config); 
-        
-        // 2. FILTERING LOGIC FIX: 
-        // null check සහ String conversion මගින් දත්ත වර්ග අතර ගැටළු මඟහරවා ඇත.
-        const filteredAppts = aRes.data.filter((app: Appointment) => {
-            return app.doctor && String(app.doctor.id) === String(docId);
-        });
-        
-        setAppointmentsList(filteredAppts);
+        // ✅ වෙනස සිදු කළ කොටස: කෙලින්ම backend එකෙන් අදාළ දොස්තරගේ appointments පමණක් ලබා ගැනීම
+        const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
+        setAppointmentsList(aRes.data);
 
         const rRes = await api.get('/medical-records', config);
         setRecordsList(rRes.data);
