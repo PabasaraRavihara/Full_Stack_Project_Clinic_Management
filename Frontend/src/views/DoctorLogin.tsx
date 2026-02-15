@@ -10,30 +10,32 @@ const DoctorLogin = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+ 
 
-    try {
-      const response = await api.post('/doctors/login', {
-        email: email,
-        password: password
-      });
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
 
-      if (response.status === 200) {
-        console.log("Doctor Login Success!");
-        
-        // ✅ වැදගත්: Dashboard එකට ගැළපෙන ලෙස 'doctorData' නමින් සේව් කරන්න
-        const token = response.data;
-        localStorage.setItem('doctorData', token); 
-        
-        navigate('/doctor-dashboard'); 
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Invalid Email or Password");
+  try {
+    const response = await api.post('/doctors/login', {
+      email: email,
+      password: password
+    });
+
+    if (response.status === 200) {
+      console.log("Doctor Login Success!");
+      
+     
+      const loginData = response.data; 
+      localStorage.setItem('doctorData', JSON.stringify(loginData)); 
+      
+      navigate('/doctor-dashboard'); 
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setError("Invalid Email or Password");
+  }
+};
 
   return (
     <div className="login-container" style={{display: 'flex', height: '100vh'}}>
