@@ -119,16 +119,19 @@ const DoctorDashboard = () => {
         // localStorage එකෙන් එන දත්තවල ව්‍යුහය අනුව ID එක ලබා ගැනීම
         const docId = loggedInUser.id; 
 
+        // 1. Patients ලබා ගැනීම
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        // ✅ වෙනස සිදු කළ කොටස: කෙලින්ම backend එකෙන් අදාළ දොස්තරගේ appointments පමණක් ලබා ගැනීම
+        // 2. ✅ Appointments ලබා ගැනීම (දොස්තරට අදාළ ඒවා පමණක් Backend එකෙන් ගනියි)
         const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
         setAppointmentsList(aRes.data);
 
+        // 3. Records ලබා ගැනීම
         const rRes = await api.get('/medical-records', config);
         setRecordsList(rRes.data);
 
+        // 4. Billings ලබා ගැනීම
         const bRes = await api.get('/billings', config);
         setBillingsList(bRes.data);
         
