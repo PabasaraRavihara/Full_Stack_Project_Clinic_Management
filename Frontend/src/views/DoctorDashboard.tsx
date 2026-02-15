@@ -109,39 +109,42 @@ const DoctorDashboard = () => {
   };
 
 // --- API Calls (Fetch Data) ---
-const fetchData = async () => {
-  try {
-      const config = getAuthConfig();
-      const storedData = localStorage.getItem('doctorData');
-      if (!storedData) return;
+  const fetchData = async () => {
+    try {
+        const config = getAuthConfig();
+        const storedData = localStorage.getItem('doctorData');
+        
+        if (!storedData) {
+            console.error("No data in LocalStorage!");
+            return;
+        }
 
-      const loggedInUser = JSON.parse(storedData);
-      
-      // ✅ දොස්තරගේ ID එක තිබිය හැකි හැම තැනම පරීක්ෂා කර අදාළ ID එක ගනී
-      const docId = loggedInUser.doctor?.id || loggedInUser.id || loggedInUser.doctorId; 
 
-      const pRes = await api.get('/patients', config);
-      setPatientsList(pRes.data);
+        
+        // 1. Patients ලබා ගැනීම
+        const pRes = await api.get('/patients', config);
+        setPatientsList(pRes.data);
 
-      // ✅ ලොගින් වූ දොස්තරට අදාළ දත්ත පමණක් ගෙන්වීම
-      if (docId) {
-          const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
-          setAppointmentsList(aRes.data);
-      } else {
-          const aRes = await api.get('/appointments', config); 
-          setAppointmentsList(aRes.data);
-      }
+        // 2. Appointments
+    
+        const aRes = await api.get('/appointments', config); 
+        setAppointmentsList(aRes.data);
 
-      const rRes = await api.get('/medical-records', config);
-      setRecordsList(rRes.data);
+        // 3. Records
+        const rRes = await api.get('/medical-records', config);
+        setRecordsList(rRes.data);
 
-      const bRes = await api.get('/billings', config);
-      setBillingsList(bRes.data);
-      setIncome(bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0));
-  } catch (err) {
-      console.error("Error fetching data:", err);
-  }
-};
+        // 4. Billings
+        const bRes = await api.get('/billings', config);
+        setBillingsList(bRes.data);
+        
+        const total = bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0);
+        setIncome(total);
+
+    } catch (err) {
+        console.error("Error fetching data:", err);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -224,29 +227,30 @@ const fetchData = async () => {
   };
 
   // --- ACTIONS: RECORDS ---
- // ✅ Record Update එකේදී Patient Object එක නිවැරදිව යැවීම
-const handleSaveRecord = async () => {
-  try { 
-      const config = getAuthConfig();
-      const payload = {
-          diagnosis: newRecord.diagnosis,
-          treatment: newRecord.treatment,
-          notes: newRecord.notes,
-          recordDate: newRecord.recordDate || new Date().toISOString().split('T')[0],
-          // ✅ Patient ව Object එකක් ලෙස යැවිය යුතුය
-          patient: { id: Number(newRecord.patientId) }
-      };
+  const handleSaveRecord = async () => {
+    try { 
+        const config = getAuthConfig();
+        
+        const payload = {
+            ...newRecord,
+            recordDate: newRecord.recordDate ? newRecord.recordDate : new Date().toISOString().split('T')[0]
+        };
 
-      if (isEditing && editingId) {
-          await api.put(`/medical-records/${editingId}`, payload, config);
-          alert("Record Updated Successfully!");
-      } else {
-          await api.post('/medical-records', payload, config);
-          alert("Record Added Successfully!");
-      }
-      resetForms(); fetchData(); setRecordSubTab('view');
-  } catch (err) { alert("Error Saving Record! Please check Patient ID."); }
-};
+        if (isEditing && editingId) {
+            await api.put(`/medical-records/${editingId}`, payload, config); 
+            alert("Record Updated!"); 
+        } else {
+            await api.post('/medical-records', payload, config); 
+            alert("Record Added!"); 
+        }
+        resetForms(); 
+        fetchData(); 
+        setRecordSubTab('view'); 
+    } catch (err) { 
+        console.error(err);
+        alert("Error Saving Record!"); 
+    }
+  };
 
   const handleDeleteRecord = async (id: number) => {
       if(!window.confirm("Delete this record?")) return;
@@ -272,28 +276,34 @@ const handleSaveRecord = async () => {
   };
 
   // --- ACTIONS: BILLING (FIXED) ---
-// ✅ Billing Edit වලදී එන Data Type Error එක විසඳීමට
-const handleSaveBill = async () => {
-    try {
-        const config = getAuthConfig();
-        const payload = { 
-            amount: Number(newBill.amount), // අනිවාර්යයෙන්ම Number එකක් විය යුතුය
-            paymentMethod: newBill.paymentMethod, 
-            status: newBill.status, 
-            paymentDate: new Date().toISOString().slice(0, 19), 
-            appointment: { id: Number(newBill.appointmentId) } // Appt ID එකත් Number විය යුතුය
-        };
-        
-        if(isEditing && editingId) {
-           await api.put(`/billings/${editingId}`, payload, config);
-           alert("Bill Updated Successfully!");
-        } else {
-           await api.post('/billings', payload, config);
-           alert("Bill Created Successfully!");
-        }
-        resetForms(); fetchData(); setBillingSubTab('view');
-    } catch (error) { alert("Error Saving Bill! Make sure the Appointment ID is correct."); }
-};
+  const handleSaveBill = async () => {
+      try {
+          const config = getAuthConfig();
+          
+          // FIX: Ensure values are Numbers
+          const payload = { 
+              amount: Number(newBill.amount),  // Convert to Number
+              paymentMethod: newBill.paymentMethod, 
+              status: newBill.status, 
+              paymentDate: new Date().toISOString().slice(0, 19), 
+              appointment: { id: Number(newBill.appointmentId) } // Convert to Number
+          };
+          
+          if(isEditing && editingId) {
+             await api.put(`/billings/${editingId}`, payload, config);
+             alert("Bill Updated!");
+          } else {
+             await api.post('/billings', payload, config);
+             alert("Bill Created!");
+          }
+          resetForms();
+          fetchData();
+          setBillingSubTab('view');
+      } catch (error) { 
+          console.error(error); // See exact error in console
+          alert("Error Saving Bill! Make sure the Appointment ID is correct."); 
+      }
+  };
 
   const handleDeleteBill = async (id: number) => {
       if(!window.confirm("Delete this bill?")) return;
