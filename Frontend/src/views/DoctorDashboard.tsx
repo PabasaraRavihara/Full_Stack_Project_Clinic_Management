@@ -116,14 +116,20 @@ const DoctorDashboard = () => {
         if (!storedData) return;
 
         const loggedInUser = JSON.parse(storedData);
-        // localStorage එකෙන් එන දත්තවල ව්‍යුහය අනුව ID එක ලබා ගැනීම
-        const docId = loggedInUser.id; 
+        
+        // ✅ FIX: Doctor ID එක නිවැරදිව ලබා ගැනීම (Nested Object එකකින්)
+        const docId = loggedInUser.doctor ? loggedInUser.doctor.id : loggedInUser.id; 
+
+        if (!docId) {
+            console.error("Doctor ID could not be identified");
+            return;
+        }
 
         // 1. Patients ලබා ගැනීම
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        // 2. ✅ Appointments ලබා ගැනීම (දොස්තරට අදාළ ඒවා පමණක් Backend එකෙන් ගනියි)
+        // 2. Appointments ලබා ගැනීම (දොස්තරට අදාළ ඒවා පමණක් Backend එකෙන් ගනියි)
         const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
         setAppointmentsList(aRes.data);
 
