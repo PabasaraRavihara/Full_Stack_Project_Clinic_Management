@@ -41,7 +41,7 @@ public class AppointmentController {
     @Autowired
     private DoctorService doctorService;
 
-   
+    
     @PostMapping
     public ResponseEntity<?> createAppointment(@RequestBody Map<String, String> body) {
         try {
@@ -98,5 +98,11 @@ public class AppointmentController {
     @GetMapping
     public ResponseEntity<List<Appointment>> getAllAppointments() {
         return ResponseEntity.ok(appointmentService.getAllAppointments());
+    }
+
+    // දොස්තරගේ ID එක අනුව පෙරීමට අලුතින් එක් කළ Endpoint එක
+    @GetMapping("/doctor/{doctorId}")
+    public ResponseEntity<List<Appointment>> getAppointmentsByDoctor(@PathVariable Long doctorId) {
+        return ResponseEntity.ok(appointmentService.getAppointmentsByDoctorId(doctorId));
     }
 }
