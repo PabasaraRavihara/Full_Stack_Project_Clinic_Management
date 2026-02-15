@@ -108,7 +108,7 @@ const DoctorDashboard = () => {
       };
   };
 
- // --- API Calls (Fetch Data) ---
+// --- API Calls (Fetch Data) ---
   const fetchData = async () => {
     try {
         const config = getAuthConfig();
@@ -116,35 +116,36 @@ const DoctorDashboard = () => {
         if (!storedData) return;
 
         const loggedInUser = JSON.parse(storedData);
-        
-        // ✅ දත්ත එන්නේ loggedInUser.doctor.id ලෙස ද නැත්නම් loggedInUser.id ලෙස ද කියා පරීක්ෂා කරයි
+
+      
         let docId = null;
-        if (loggedInUser?.doctor?.id) {
-          docId = loggedInUser.doctor.id;
-        } else if (loggedInUser?.id) {
-          docId = loggedInUser.id;
+        if (loggedInUser.doctor && loggedInUser.doctor.id) {
+            docId = loggedInUser.doctor.id;
+        } else if (loggedInUser.id) {
+            docId = loggedInUser.id;
         }
 
-        console.log("Current Doctor ID:", docId); 
+        console.log("Found Doctor ID in Dashboard:", docId);
+        // ----------------------------------------------------
+
+        if (!docId) {
+            console.error("Doctor ID missing! Please login again.");
+            return;
+        }
 
         // 1. Patients ලබා ගැනීම
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        // 2. Appointments ලබා ගැනීම (ID එක තිබේ නම් පමණක්)
-        if (docId) {
-            const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
-            console.log("Appointments found:", aRes.data);
-            setAppointmentsList(aRes.data);
-        } else {
-            console.error("Doctor ID missing from LocalStorage!");
-        }
+        // 2. Appointments (දැන් docId එක හරියට යනවා)
+        const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
+        setAppointmentsList(aRes.data);
 
-        // 3. Records ලබා ගැනීම
+        // 3. Records
         const rRes = await api.get('/medical-records', config);
         setRecordsList(rRes.data);
 
-        // 4. Billings ලබා ගැනීම
+        // 4. Billings
         const bRes = await api.get('/billings', config);
         setBillingsList(bRes.data);
         
