@@ -12,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +53,18 @@ public class DoctorController {
             }
 
             String token = jwtUtil.generateToken(email, "ROLE_DOCTOR");
-            return ResponseEntity.ok(token);
+
+            // ✅ ලොගින් වන දොස්තරගේ ID එක සොයා ගැනීම
+            Doctor doctor = doctorService.findByEmail(email);
+
+            // ✅ ඔබ ඉල්ලූ පරිදි ResponseEntity එක සකස් කිරීම
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            if (doctor != null) {
+                response.put("doctorId", doctor.getId()); 
+            }
+
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
