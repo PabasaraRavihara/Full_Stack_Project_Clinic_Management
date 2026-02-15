@@ -55,13 +55,32 @@ const AdminDashboard = () => {
     navigate('/admin-login');
   };
 
+  // ✅ HELPER: Token ලබා ගැනීම සඳහා (මෙය අලුතින් එක් කළා)
+  const getAuthConfig = () => {
+      const storedData = localStorage.getItem('adminData');
+      let token = null;
+      if (storedData) {
+          try {
+              const parsed = JSON.parse(storedData);
+              token = parsed.token || parsed; 
+          } catch (e) {
+              token = storedData;
+          }
+      }
+      return {
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+          }
+      };
+  };
+
   // Load Admin Name 
   useEffect(() => {
     const storedData = localStorage.getItem('adminData');
     if (storedData) {
       try {
         const parsedData = JSON.parse(storedData);
-        // Check if name exists, otherwise default or use email part
         if (parsedData.name) {
           const firstName = parsedData.name.split(' ')[0];
           setAdminName(firstName);
@@ -75,33 +94,41 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // api call
+  // ✅ API Calls නිවැරදි කිරීම (getAuthConfig එක් කර ඇත)
   const fetchDoctors = async () => {
-    try { const res = await api.get('/doctors'); setDoctorsList(res.data); } catch (err) { console.error(err); }
+    try { 
+        const res = await api.get('/doctors', getAuthConfig()); 
+        setDoctorsList(res.data); 
+    } catch (err) { console.error(err); }
   };
 
   const fetchPatients = async () => {
-    try { const res = await api.get('/patients'); setPatientsList(res.data); } catch (err) { console.error(err); }
+    try { 
+        const res = await api.get('/patients', getAuthConfig()); 
+        setPatientsList(res.data); 
+    } catch (err) { console.error(err); }
   };
 
   const fetchAppointments = async () => {
-    try { const res = await api.get('/appointments'); setAppointmentsList(res.data); } catch (err) { console.error(err); }
+    try { 
+        const res = await api.get('/appointments', getAuthConfig()); 
+        setAppointmentsList(res.data); 
+    } catch (err) { console.error(err); }
   };
 
   // Add doctor function
   const handleAddDoctor = async () => {
     try {
       if(!newDoctor.name || !newDoctor.email || !newDoctor.password || !newDoctor.phone || !newDoctor.experience || !newDoctor.specialization) {
-        alert("Please fill in ALL required fields (Name, Specialization, Email, Phone, Experience, Password)!");
+        alert("Please fill in ALL required fields!");
         return;
       }
 
-      await api.post('/doctors', newDoctor);
+      // ✅ POST Request එකටත් getAuthConfig එක් කළා
+      await api.post('/doctors', newDoctor, getAuthConfig());
       alert("Doctor Added Successfully!");
       
-      // Clear form
       setNewDoctor({ name: '', specialization: '', email: '', phone: '', experience: '', password: '' });
-      // Refresh list
       fetchDoctors();
       setDoctorSubTab('view');
       
@@ -184,7 +211,6 @@ const AdminDashboard = () => {
         <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{margin: 0}}>{getTitle()}</h1>
           
-          {/* Right side admin profile */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{textAlign: 'right', lineHeight: '1.2'}}>
                   <span style={{display: 'block', fontSize: '0.8rem', color: '#888'}}>Welcome,</span>
@@ -210,11 +236,9 @@ const AdminDashboard = () => {
 
         <div className="dashboard-content-wrapper">
           
-          {/* --- MAIN SLIDER CONTAINER --- */}
           <div className="main-slider-viewport">
             <div className={`main-slider-track pos-${activeTab}`}>
               
-              {/* --- DASHBOARD --- */}
               <div className="main-slider-slide">
                 <section className="dashboard-content">
                   <div className="stat-card">
@@ -232,7 +256,6 @@ const AdminDashboard = () => {
                 </section>
               </div>
 
-              {/* --- MANAGE DOCTORS --- */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
@@ -252,11 +275,9 @@ const AdminDashboard = () => {
                     </button>
                   </div>
 
-                  {/* Inner Slider for Doctors View/Add */}
                   <div className="slider-viewport">
                     <div className={`slider-track ${doctorSubTab === 'add' ? 'slide-left' : ''}`}>
                       
-                      {/* List */}
                       <div className="slider-slide">
                         <div className="table-container">
                           <table className="data-table">
@@ -284,7 +305,6 @@ const AdminDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Add Form */}
                       <div className="slider-slide">
                         <div className="form-container">
                           <h3>Register New Doctor</h3>
@@ -330,7 +350,6 @@ const AdminDashboard = () => {
                 </section>
               </div>
 
-              {/* --- PATIENT DIRECTORY --- */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="table-container">
@@ -356,7 +375,6 @@ const AdminDashboard = () => {
                 </section>
               </div>
 
-              {/* --- ALL APPOINTMENTS --- */}
               <div className="main-slider-slide">
                 <section className="doctors-section"> 
                   <div className="table-container">
