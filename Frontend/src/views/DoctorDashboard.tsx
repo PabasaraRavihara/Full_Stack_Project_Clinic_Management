@@ -119,11 +119,10 @@ const fetchData = async () => {
 
       try {
         const parsed = JSON.parse(storedData);
-      
-        docId = parsed.doctor?.id || parsed.id || parsed.doctorId;
-      } catch (e) {
        
-        console.warn("Plain token found. ID extraction from storage failed.");
+        docId = parsed.doctorId || parsed.id;
+      } catch (e) {
+        console.warn("Using plain token. No ID available for filtering.");
       }
 
      
@@ -135,16 +134,13 @@ const fetchData = async () => {
       setBillingsList(bRes.data);
       setIncome(bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0));
 
-     
+
       if (docId) {
-        console.log("Fetching appointments for Doctor ID:", docId);
         const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
         setAppointmentsList(aRes.data);
       } else {
-      
-        console.warn("Doctor ID not found in storage. Showing all appointments as fallback.");
-        const aRes = await api.get('/appointments', config); 
-        setAppointmentsList(aRes.data);
+        console.error("ID not found. Showing empty appointment list for security.");
+        setAppointmentsList([]); 
       }
 
     } catch (err) { 
