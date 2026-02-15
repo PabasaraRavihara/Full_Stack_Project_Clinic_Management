@@ -1,43 +1,29 @@
 version: '3.8'
 
 services:
-  # 1. MySQL Database Service
-  mysqldb:
-    image: mysql:8.0
-    container_name: clinic-mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: Pabasara  
-      MYSQL_DATABASE: new_clinic_manage_db
-    ports:
-      - "3307:3306" 
-    volumes:
-      - db_data:/var/lib/mysql
-
-  # 2. Backend Service
+  # 1. Backend Service
+  # මෙහි තිබූ mysqldb කොටස සම්පූර්ණයෙන්ම ඉවත් කර ඇත
   backend:
-    build: ./backend  
+    build: ./Backend  
     container_name: clinic-backend
     ports:
       - "8083:8083"
-    depends_on:
-      - mysqldb
+    # Neon භාවිතා කරන නිසා මෙහි තිබූ depends_on ඉවත් කර ඇත
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/new_clinic_manage_db?createDatabaseIfNotExist=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: Pabasara
+      # දත්ත පද්ධති සැකසුම් application.properties හරහා ක්‍රියාත්මක වන බැවින් 
+      # මෙහි තිබූ SPRING_DATASOURCE_URL වැනි දෑ ඉවත් කිරීම වඩාත් සුදුසුයි
+      - SPRING_PROFILES_ACTIVE=default
 
-  # 3. Frontend Service 
+  # 2. Frontend Service 
   frontend:
-    build: ./frontend 
+    build: ./Frontend 
     container_name: clinic-frontend
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend:/app         
+      - ./Frontend:/app         
       - /app/node_modules       
     depends_on:
       - backend
 
-volumes:
-  db_data:
+# MySQL වලට අදාළ volumes ද ඉවත් කර ඇත
