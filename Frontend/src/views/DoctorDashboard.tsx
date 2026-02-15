@@ -57,6 +57,8 @@ interface Billing {
 const DoctorDashboard = () => {
   const navigate = useNavigate();
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [isLoading, setIsLoading] = useState(true);
 
   // --- States ---
@@ -446,6 +448,21 @@ const handleSaveBill = async () => {
       exit={{ opacity: 0, transition: { duration: 0.5 } }}
       className="dashboard-layout"
     >
+      <div className="search-container" style={{ marginBottom: '20px' }}>
+  <input
+    type="text"
+    placeholder="Search by Patient Name or Email..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    style={{
+      padding: '10px',
+      width: '100%',
+      borderRadius: '8px',
+      border: '1px solid #ddd',
+      fontSize: '1rem'
+    }}
+  />
+</div>
       {/* --- SIDEBAR () --- */}
       <div className="dashboard-sidebar" style={{ backgroundColor: sidebarColor }}>
         <div className="dashboard-logo"><h2 style={{margin:0}}>Doctor Portal</h2></div>
@@ -484,86 +501,171 @@ const handleSaveBill = async () => {
               )}
 
               {/* --- PATIENTS TAB --- */}
-              {activeTab === 'patients' && (
-                <section className="doctors-section">
-                  <div className="action-buttons-container">
-                    <button className={`action-btn ${patientSubTab === 'view' ? 'active' : ''}`} onClick={() => {setPatientSubTab('view'); resetForms();}}><ListIcon /> View List</button>
-                    <button className={`action-btn ${patientSubTab === 'add' ? 'active' : ''}`} onClick={() => {setPatientSubTab('add'); resetForms();}}><PlusIcon /> Add Patient</button>
-                  </div>
+  {activeTab === 'patients' && (
+  <section className="doctors-section">
+    {/* Action Buttons සහ Search Bar එක එකම container එකක් ඇතුළට දාමු */}
+    <div className="action-buttons-container" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+      <button 
+        className={`action-btn ${patientSubTab === 'view' ? 'active' : ''}`} 
+        onClick={() => {setPatientSubTab('view'); resetForms();}}
+      >
+        <ListIcon /> View List
+      </button>
+      
+      <button 
+        className={`action-btn ${patientSubTab === 'add' ? 'active' : ''}`} 
+        onClick={() => {setPatientSubTab('add'); resetForms();}}
+      >
+        <PlusIcon /> Add Patient
+      </button>
 
-                  {patientSubTab === 'view' ? (
-                      <div className="table-container">
-                        <table className="data-table">
-                            <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead>
-                            <tbody>
-                                {patientsList.map(p => (
-                                    <tr key={p.id}>
-                                        <td>{p.id}</td>
-                                        <td>{p.firstName} {p.lastName}</td>
-                                        <td>{p.email}</td>
-                                        <td>{p.phone}</td>
-                                        <td>
-                                            <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditPatient(p)}>Edit</button>
-                                            <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeletePatient(p.id!)}>Delete</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                      </div>
-                  ) : (
-                      <div className="form-container">
-                          <h3>{isEditing ? 'Edit Patient' : 'Register New Patient'}</h3>
-                          <form className="admin-form">
-                              <div className="form-row">
-                                  <div className="form-group"><label>First Name</label><input value={newPatient.firstName} onChange={e => setNewPatient({...newPatient, firstName: e.target.value})}/></div>
-                                  <div className="form-group"><label>Last Name</label><input value={newPatient.lastName} onChange={e => setNewPatient({...newPatient, lastName: e.target.value})}/></div>
-                              </div>
-                              <div className="form-row">
-                                  <div className="form-group"><label>Email</label><input value={newPatient.email} onChange={e => setNewPatient({...newPatient, email: e.target.value})}/></div>
-                                  <div className="form-group"><label>Phone</label><input value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})}/></div>
-                              </div>
-                              <div className="form-row">
-                                  <div className="form-group"><label>Age</label><input value={newPatient.age} onChange={e => setNewPatient({...newPatient, age: e.target.value})}/></div>
-                                  <div className="form-group"><label>Gender</label><input value={newPatient.gender} onChange={e => setNewPatient({...newPatient, gender: e.target.value})}/></div>
-                              </div>
-                              <div className="form-group"><label>Address</label><input value={newPatient.address} onChange={e => setNewPatient({...newPatient, address: e.target.value})}/></div>
-                              <div className="form-group"><label>Password</label><input type="text" placeholder={isEditing ? "Leave blank to keep current" : "Set Password"} value={newPatient.password || ''} onChange={e => setNewPatient({...newPatient, password: e.target.value})}/></div>
-                              <button type="button" className="save-btn" onClick={handleSavePatient}>{isEditing ? 'Update Patient' : 'Save Patient'}</button>
-                          </form>
-                      </div>
-                  )}
-                </section>
-              )}
+      {/* සර්ච් බාර් එක පෙන්වන්නේ ලිස්ට් එක බලන වෙලාවට විතරයි */}
+      {patientSubTab === 'view' && (
+        <input 
+          type="text" 
+          placeholder="Search by name or email..." 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ 
+            padding: '8px', 
+            borderRadius: '5px', 
+            border: '1px solid #ccc', 
+            marginLeft: 'auto', // මේකෙන් තමයි සර්ච් බාර් එක දකුණු පැත්තට යන්නේ
+            width: '250px' 
+          }}
+        />
+      )}
+    </div> {/* action-buttons-container අවසානය */}
 
-              {/* --- APPOINTMENTS TAB --- */}
-              {activeTab === 'appointments' && (
-                <section className="doctors-section">
-                   <div className="table-container">
-                        <h3 style={{marginBottom:'15px', color:'#2E7D32'}}>My Appointment Requests</h3>
-                        <table className="data-table">
-                            <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
-                            <tbody>
-                                {appointmentsList.map(a => (
-                                    <tr key={a.id}>
-                                        <td>{a.id}</td><td>{a.date}</td><td>{a.time}</td>
-                                        <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
-                                        <td><span style={{fontWeight:'bold', color: a.status === 'PENDING' ? 'orange' : a.status === 'APPROVED' ? 'green' : 'red'}}>{a.status}</span></td>
-                                        <td>
-                                            {a.status === 'PENDING' ? (
-                                                <>
-                                                    <button style={{...btnStyle, background:'#28a745'}} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
-                                                    <button style={{...btnStyle, background:'#dc3545'}} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
-                                                </>
-                                            ) : <span style={{fontSize:'0.8rem', color:'#777'}}>Action Taken</span>}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                      </div>
-                </section>
-              )}
+    {/* පේෂන්ට්ලා පෙන්වන Table එක හෝ Form එක මාරුවෙන් මාරුවට පෙන්වීම */}
+    {patientSubTab === 'view' ? (
+      <div className="table-container">
+        <table className="data-table">
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {patientsList
+              .filter(p => 
+                `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                p.email.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map(p => (
+                <tr key={p.id}>
+                  <td>{p.id}</td>
+                  <td>{p.firstName} {p.lastName}</td>
+                  <td>{p.email}</td>
+                  <td>{p.phone}</td>
+                  <td>
+                    <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditPatient(p)}>Edit</button>
+                    <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeletePatient(p.id!)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      /* Registration/Edit Form එක */
+      <div className="form-container">
+        <h3>{isEditing ? 'Edit Patient' : 'Register New Patient'}</h3>
+        <form className="admin-form">
+          <div className="form-row">
+            <div className="form-group"><label>First Name</label><input value={newPatient.firstName} onChange={e => setNewPatient({...newPatient, firstName: e.target.value})}/></div>
+            <div className="form-group"><label>Last Name</label><input value={newPatient.lastName} onChange={e => setNewPatient({...newPatient, lastName: e.target.value})}/></div>
+          </div>
+          <div className="form-row">
+            <div className="form-group"><label>Email</label><input value={newPatient.email} onChange={e => setNewPatient({...newPatient, email: e.target.value})}/></div>
+            <div className="form-group"><label>Phone</label><input value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})}/></div>
+          </div>
+          <div className="form-row">
+            <div className="form-group"><label>Age</label><input value={newPatient.age} onChange={e => setNewPatient({...newPatient, age: e.target.value})}/></div>
+            <div className="form-group"><label>Gender</label><input value={newPatient.gender} onChange={e => setNewPatient({...newPatient, gender: e.target.value})}/></div>
+          </div>
+          <div className="form-group"><label>Address</label><input value={newPatient.address} onChange={e => setNewPatient({...newPatient, address: e.target.value})}/></div>
+          <div className="form-group"><label>Password</label><input type="text" placeholder={isEditing ? "Leave blank to keep current" : "Set Password"} value={newPatient.password || ''} onChange={e => setNewPatient({...newPatient, password: e.target.value})}/></div>
+          <button type="button" className="save-btn" onClick={handleSavePatient}>{isEditing ? 'Update Patient' : 'Save Patient'}</button>
+        </form>
+      </div>
+    )}
+  </section>
+)}
+
+ {/* --- APPOINTMENTS TAB --- */}
+{activeTab === 'appointments' && (
+  <section className="doctors-section">
+    <div className="table-container">
+    
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '15px' 
+      }}>
+        <h3 style={{ margin: 0, color: '#2E7D32' }}>My Appointment Requests</h3>
+        
+        <input 
+          type="text" 
+          placeholder="Search by Patient Name..." 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ 
+            padding: '8px 12px', 
+            borderRadius: '5px', 
+            border: '1px solid #ccc', 
+            width: '250px',
+            fontSize: '0.9rem' 
+          }}
+        />
+      </div>
+
+      <table className="data-table">
+        <thead>
+          <tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {appointmentsList
+            .filter(a => {
+              const fullName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Unknown';
+              return fullName.toLowerCase().includes(searchTerm.toLowerCase());
+            })
+            .map(a => (
+              <tr key={a.id}>
+                <td>{a.id}</td>
+                <td>{a.date}</td>
+                <td>{a.time}</td>
+                <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
+                <td>
+                  <span style={{ 
+                    fontWeight: 'bold', 
+                    color: a.status === 'PENDING' ? 'orange' : a.status === 'APPROVED' ? 'green' : 'red' 
+                  }}>
+                    {a.status}
+                  </span>
+                </td>
+                <td>
+                  {a.status === 'PENDING' ? (
+                    <>
+                      <button style={{ ...btnStyle, background: '#28a745' }} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
+                      <button style={{ ...btnStyle, background: '#dc3545' }} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
+                    </>
+                  ) : <span style={{ fontSize: '0.8rem', color: '#777' }}>Action Taken</span>}
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+      
+      
+      {appointmentsList.filter(a => {
+        const fullName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Unknown';
+        return fullName.toLowerCase().includes(searchTerm.toLowerCase());
+      }).length === 0 && (
+        <p style={{ textAlign: 'center', padding: '20px', color: '#777' }}>No matching appointments found.</p>
+      )}
+    </div>
+  </section>
+)}
 
               {/* --- RECORDS TAB --- */}
               {activeTab === 'records' && (
@@ -605,44 +707,106 @@ const handleSaveBill = async () => {
                 </section>
               )}
 
-              {/* --- BILLING TAB --- */}
-              {activeTab === 'billing' && (
-                <section className="doctors-section">
-                  <div className="action-buttons-container">
-                    <button className={`action-btn ${billingSubTab === 'view' ? 'active' : ''}`} onClick={() => {setBillingSubTab('view'); resetForms();}}>View History</button>
-                    <button className={`action-btn ${billingSubTab === 'add' ? 'active' : ''}`} onClick={() => {setBillingSubTab('add'); resetForms();}}>Create Bill</button>
-                  </div>
-                  {billingSubTab === 'view' ? (
-                    <div className="table-container">
-                      <table className="data-table">
-                        <thead><tr><th>Bill ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
-                        <tbody>
-                          {billingsList.map(b => (
-                            <tr key={b.billId}>
-                              <td>{b.billId}</td><td>Rs. {b.amount}</td><td>{b.status}</td>
-                              <td>
-                                <button style={{...btnStyle, background:'#007BFF'}} onClick={() => printBill(b)}>Print</button>
-                                <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditBill(b)}>Edit</button>
-                                <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteBill(b.billId)}>Delete</button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="form-container">
-                      <h3>{isEditing ? 'Edit Bill' : 'Create Bill'}</h3>
-                      <form className="admin-form">
-                        <div className="form-group"><label>Appt ID</label><input type="number" value={newBill.appointmentId} onChange={e=>setNewBill({...newBill, appointmentId: e.target.value})}/></div>
-                        <div className="form-group"><label>Amount</label><input type="number" value={newBill.amount} onChange={e=>setNewBill({...newBill, amount: e.target.value})}/></div>
-                        <div className="form-group"><label>Status</label><input type="text" value={newBill.status} onChange={e=>setNewBill({...newBill, status: e.target.value})}/></div>
-                        <button type="button" className="save-btn" onClick={handleSaveBill}>{isEditing ? 'Update' : 'Generate Bill'}</button>
-                      </form>
-                    </div>
-                  )}
-                </section>
-              )}
+ {/* --- BILLING TAB --- */}
+{activeTab === 'billing' && (
+  <section className="doctors-section">
+    <div className="action-buttons-container" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+      <button 
+        className={`action-btn ${billingSubTab === 'view' ? 'active' : ''}`} 
+        onClick={() => { setBillingSubTab('view'); resetForms(); setSearchTerm(''); }}
+      >
+        View History
+      </button>
+      <button 
+        className={`action-btn ${billingSubTab === 'add' ? 'active' : ''}`} 
+        onClick={() => { setBillingSubTab('add'); resetForms(); }}
+      >
+        Create Bill
+      </button>
+
+    
+      {billingSubTab === 'view' && (
+        <input 
+          type="text" 
+          placeholder="Search by Bill ID or Status..." 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ 
+            padding: '8px 12px', 
+            borderRadius: '5px', 
+            border: '1px solid #ccc', 
+            marginLeft: 'auto', 
+            width: '250px' 
+          }}
+        />
+      )}
+    </div>
+
+    {billingSubTab === 'view' ? (
+      <div className="table-container">
+        <table className="data-table">
+          <thead>
+            <tr><th>Bill ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {billingsList
+              .filter(b => 
+           
+                b.billId.toString().includes(searchTerm) || 
+                b.status.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map(b => (
+                <tr key={b.billId}>
+                  <td>{b.billId}</td>
+                  <td>Rs. {b.amount}</td>
+                  <td>
+                    <span style={{ 
+                      color: b.status === 'PAID' ? 'green' : 'red', 
+                      fontWeight: 'bold' 
+                    }}>
+                      {b.status}
+                    </span>
+                  </td>
+                  <td>
+                    <button style={{ ...btnStyle, background: '#007BFF' }} onClick={() => printBill(b)}>Print</button>
+                    <button style={{ ...btnStyle, background: '#FFC107', color: 'black' }} onClick={() => startEditBill(b)}>Edit</button>
+                    <button style={{ ...btnStyle, background: '#F44336' }} onClick={() => handleDeleteBill(b.billId)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+
+   
+        {billingsList.filter(b => 
+          b.billId.toString().includes(searchTerm) || 
+          b.status.toLowerCase().includes(searchTerm.toLowerCase())
+        ).length === 0 && (
+          <p style={{ textAlign: 'center', padding: '20px', color: '#777' }}>No matching billing records found.</p>
+        )}
+      </div>
+    ) : (
+      <div className="form-container">
+        <h3>{isEditing ? 'Edit Bill' : 'Create Bill'}</h3>
+        <form className="admin-form">
+          <div className="form-group">
+            <label>Appt ID</label>
+            <input type="number" value={newBill.appointmentId} onChange={e => setNewBill({ ...newBill, appointmentId: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label>Amount</label>
+            <input type="number" value={newBill.amount} onChange={e => setNewBill({ ...newBill, amount: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label>Status</label>
+            <input type="text" value={newBill.status} onChange={e => setNewBill({ ...newBill, status: e.target.value })} />
+          </div>
+          <button type="button" className="save-btn" onClick={handleSaveBill}>{isEditing ? 'Update' : 'Generate Bill'}</button>
+        </form>
+      </div>
+    )}
+  </section>
+)}
 
             </motion.div>
           )}

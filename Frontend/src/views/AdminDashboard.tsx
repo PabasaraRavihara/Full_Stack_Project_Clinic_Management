@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, ListIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts';
 import logo from '../assets/logo.png';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { motion } from 'framer-motion';
 
 // Types 
 interface Doctor {
@@ -33,6 +35,9 @@ interface Appointment {
 const AdminDashboard = () => {
   const navigate = useNavigate();
 
+  // --- LOADING STATE ---
+  const [isLoading, setIsLoading] = useState(true);
+
   // states
   const [activeTab, setActiveTab] = useState<'dashboard' | 'doctors' | 'patients' | 'appointments'>('dashboard');
   const [doctorSubTab, setDoctorSubTab] = useState<'view' | 'add'>('view');
@@ -55,7 +60,7 @@ const AdminDashboard = () => {
     navigate('/admin-login');
   };
 
-  // ✅ HELPER: Token ලබා ගැනීම සඳහා (මෙය අලුතින් එක් කළා)
+  // ✅ HELPER: Token 
   const getAuthConfig = () => {
       const storedData = localStorage.getItem('adminData');
       let token = null;
@@ -94,26 +99,27 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // ✅ API Calls නිවැරදි කිරීම (getAuthConfig එක් කර ඇත)
-  const fetchDoctors = async () => {
-    try { 
-        const res = await api.get('/doctors', getAuthConfig()); 
-        setDoctorsList(res.data); 
-    } catch (err) { console.error(err); }
-  };
-
-  const fetchPatients = async () => {
-    try { 
-        const res = await api.get('/patients', getAuthConfig()); 
-        setPatientsList(res.data); 
-    } catch (err) { console.error(err); }
-  };
-
-  const fetchAppointments = async () => {
-    try { 
-        const res = await api.get('/appointments', getAuthConfig()); 
-        setAppointmentsList(res.data); 
-    } catch (err) { console.error(err); }
+  // ✅ FETCH ALL DATA (LOADING LOGIC ඇතුළත් කර ඇත)
+  const fetchAllData = async () => {
+    setIsLoading(true);
+    try {
+        const config = getAuthConfig();
+        // API Calls 3ම එකවර සිදු කරයි (Promise.all භාවිතයෙන්)
+        const [docRes, patRes, appRes] = await Promise.all([
+            api.get('/doctors', config),
+            api.get('/patients', config),
+            api.get('/appointments', config)
+        ]);
+        
+        setDoctorsList(docRes.data);
+        setPatientsList(patRes.data);
+        setAppointmentsList(appRes.data);
+    } catch (err) {
+        console.error("Error fetching admin data:", err);
+    } finally {
+        // දත්ත ලැබුණු පසු තත්පර 0.8 කින් Loading නතර කරයි
+        setTimeout(() => setIsLoading(false), 800);
+    }
   };
 
   // Add doctor function
@@ -124,12 +130,13 @@ const AdminDashboard = () => {
         return;
       }
 
-      // ✅ POST Request එකටත් getAuthConfig එක් කළා
       await api.post('/doctors', newDoctor, getAuthConfig());
       alert("Doctor Added Successfully!");
       
       setNewDoctor({ name: '', specialization: '', email: '', phone: '', experience: '', password: '' });
-      fetchDoctors();
+      // දොස්තර කෙනෙක් එකතු කළ පසු ලැයිස්තුව පමණක් අලුත් කරයි
+      const res = await api.get('/doctors', getAuthConfig());
+      setDoctorsList(res.data);
       setDoctorSubTab('view');
       
     } catch (error) {
@@ -140,9 +147,7 @@ const AdminDashboard = () => {
 
   // Fetch data (on load)
   useEffect(() => {
-    fetchDoctors();
-    fetchPatients();
-    fetchAppointments();
+    fetchAllData();
   }, []);
 
   const getTitle = () => {
@@ -236,175 +241,184 @@ const AdminDashboard = () => {
 
         <div className="dashboard-content-wrapper">
           
-          <div className="main-slider-viewport">
-            <div className={`main-slider-track pos-${activeTab}`}>
-              
-              <div className="main-slider-slide">
-                <section className="dashboard-content">
-                  <div className="stat-card">
-                    <h3>Total Patients</h3>
-                    <p>{patientsList.length}</p>
-                  </div>
-                  <div className="stat-card">
-                    <h3>Doctors</h3>
-                    <p>{doctorsList.length}</p>
-                  </div>
-                  <div className="stat-card">
-                    <h3>Appointments</h3>
-                    <p>{appointmentsList.length}</p>
-                  </div>
-                </section>
-              </div>
-
-              <div className="main-slider-slide">
-                <section className="doctors-section">
-                  <div className="action-buttons-container">
-                    <button 
-                      className={`action-btn ${doctorSubTab === 'view' ? 'active' : ''}`}
-                      onClick={() => setDoctorSubTab('view')}
-                    >
-                      <ListIcon />
-                      View Doctors
-                    </button>
-                    <button 
-                      className={`action-btn ${doctorSubTab === 'add' ? 'active' : ''}`}
-                      onClick={() => setDoctorSubTab('add')}
-                    >
-                      <PlusIcon />
-                      Add Doctor
-                    </button>
-                  </div>
-
-                  <div className="slider-viewport">
-                    <div className={`slider-track ${doctorSubTab === 'add' ? 'slide-left' : ''}`}>
-                      
-                      <div className="slider-slide">
-                        <div className="table-container">
-                          <table className="data-table">
-                            <thead>
-                              <tr>
-                                <th>Name</th>
-                                <th>Specialization</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Exp</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {doctorsList.map((d) => (
-                                <tr key={d.id}>
-                                  <td>{d.name}</td>
-                                  <td>{d.specialization}</td>
-                                  <td>{d.email}</td>
-                                  <td>{d.phone}</td>
-                                  <td>{d.experience}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      <div className="slider-slide">
-                        <div className="form-container">
-                          <h3>Register New Doctor</h3>
-                          <form className="admin-form">
-                            <div className="form-row">
-                              <div className="form-group">
-                                <label>Doctor Name</label>
-                                <input type="text" value={newDoctor.name} onChange={e => setNewDoctor({...newDoctor, name: e.target.value})} />
-                              </div>
-                              <div className="form-group">
-                                <label>Specialization</label>
-                                <input type="text" value={newDoctor.specialization} onChange={e => setNewDoctor({...newDoctor, specialization: e.target.value})} />
-                              </div>
-                            </div>
-                            <div className="form-row">
-                              <div className="form-group">
-                                <label>Email</label>
-                                <input type="email" value={newDoctor.email} onChange={e => setNewDoctor({...newDoctor, email: e.target.value})} />
-                              </div>
-                              <div className="form-group">
-                                <label>Phone</label>
-                                <input type="text" value={newDoctor.phone} onChange={e => setNewDoctor({...newDoctor, phone: e.target.value})} />
-                              </div>
-                            </div>
-                            <div className="form-row">
-                              <div className="form-group">
-                                <label>Experience</label>
-                                <input type="text" value={newDoctor.experience} onChange={e => setNewDoctor({...newDoctor, experience: e.target.value})} />
-                              </div>
-                              <div className="form-group">
-                                <label>Password</label>
-                                <input type="password" value={newDoctor.password} onChange={e => setNewDoctor({...newDoctor, password: e.target.value})} />
-                              </div>
-                            </div>
-                            
-                            <button type="button" className="save-btn" onClick={handleAddDoctor}>Save Doctor</button>
-                          </form>
-                        </div>
-                      </div>
-
+          {/* ✅ පියවර 3: LOADING CONDITION ඇතුළත් කිරීම */}
+          {isLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="main-slider-viewport"
+            >
+              <div className={`main-slider-track pos-${activeTab}`}>
+                
+                <div className="main-slider-slide">
+                  <section className="dashboard-content">
+                    <div className="stat-card">
+                      <h3>Total Patients</h3>
+                      <p>{patientsList.length}</p>
                     </div>
-                  </div>
-                </section>
-              </div>
+                    <div className="stat-card">
+                      <h3>Doctors</h3>
+                      <p>{doctorsList.length}</p>
+                    </div>
+                    <div className="stat-card">
+                      <h3>Appointments</h3>
+                      <p>{appointmentsList.length}</p>
+                    </div>
+                  </section>
+                </div>
 
-              <div className="main-slider-slide">
-                <section className="doctors-section">
-                  <div className="table-container">
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Email</th>
-                          <th>Phone</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {patientsList.map((p) => (
-                          <tr key={p.id}>
-                            <td>{p.firstName} {p.lastName}</td>
-                            <td>{p.email}</td>
-                            <td>{p.phone}</td>
+                <div className="main-slider-slide">
+                  <section className="doctors-section">
+                    <div className="action-buttons-container">
+                      <button 
+                        className={`action-btn ${doctorSubTab === 'view' ? 'active' : ''}`}
+                        onClick={() => setDoctorSubTab('view')}
+                      >
+                        <ListIcon />
+                        View Doctors
+                      </button>
+                      <button 
+                        className={`action-btn ${doctorSubTab === 'add' ? 'active' : ''}`}
+                        onClick={() => setDoctorSubTab('add')}
+                      >
+                        <PlusIcon />
+                        Add Doctor
+                      </button>
+                    </div>
+
+                    <div className="slider-viewport">
+                      <div className={`slider-track ${doctorSubTab === 'add' ? 'slide-left' : ''}`}>
+                        
+                        <div className="slider-slide">
+                          <div className="table-container">
+                            <table className="data-table">
+                              <thead>
+                                <tr>
+                                  <th>Name</th>
+                                  <th>Specialization</th>
+                                  <th>Email</th>
+                                  <th>Phone</th>
+                                  <th>Exp</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {doctorsList.map((d) => (
+                                  <tr key={d.id}>
+                                    <td>{d.name}</td>
+                                    <td>{d.specialization}</td>
+                                    <td>{d.email}</td>
+                                    <td>{d.phone}</td>
+                                    <td>{d.experience}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        <div className="slider-slide">
+                          <div className="form-container">
+                            <h3>Register New Doctor</h3>
+                            <form className="admin-form">
+                              <div className="form-row">
+                                <div className="form-group">
+                                  <label>Doctor Name</label>
+                                  <input type="text" value={newDoctor.name} onChange={e => setNewDoctor({...newDoctor, name: e.target.value})} />
+                                </div>
+                                <div className="form-group">
+                                  <label>Specialization</label>
+                                  <input type="text" value={newDoctor.specialization} onChange={e => setNewDoctor({...newDoctor, specialization: e.target.value})} />
+                                </div>
+                              </div>
+                              <div className="form-row">
+                                <div className="form-group">
+                                  <label>Email</label>
+                                  <input type="email" value={newDoctor.email} onChange={e => setNewDoctor({...newDoctor, email: e.target.value})} />
+                                </div>
+                                <div className="form-group">
+                                  <label>Phone</label>
+                                  <input type="text" value={newDoctor.phone} onChange={e => setNewDoctor({...newDoctor, phone: e.target.value})} />
+                                </div>
+                              </div>
+                              <div className="form-row">
+                                <div className="form-group">
+                                  <label>Experience</label>
+                                  <input type="text" value={newDoctor.experience} onChange={e => setNewDoctor({...newDoctor, experience: e.target.value})} />
+                                </div>
+                                <div className="form-group">
+                                  <label>Password</label>
+                                  <input type="password" value={newDoctor.password} onChange={e => setNewDoctor({...newDoctor, password: e.target.value})} />
+                                </div>
+                              </div>
+                              
+                              <button type="button" className="save-btn" onClick={handleAddDoctor}>Save Doctor</button>
+                            </form>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <div className="main-slider-slide">
+                  <section className="doctors-section">
+                    <div className="table-container">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              </div>
+                        </thead>
+                        <tbody>
+                          {patientsList.map((p) => (
+                            <tr key={p.id}>
+                              <td>{p.firstName} {p.lastName}</td>
+                              <td>{p.email}</td>
+                              <td>{p.phone}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                </div>
 
-              <div className="main-slider-slide">
-                <section className="doctors-section"> 
-                  <div className="table-container">
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Date</th>
-                          <th>Time</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {appointmentsList.map((a) => (
-                          <tr key={a.id}>
-                            <td>{a.id}</td>
-                            <td>{a.date}</td>
-                            <td>{a.time}</td>
-                            <td>{a.status}</td>
+                <div className="main-slider-slide">
+                  <section className="doctors-section"> 
+                    <div className="table-container">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              </div>
+                        </thead>
+                        <tbody>
+                          {appointmentsList.map((a) => (
+                            <tr key={a.id}>
+                              <td>{a.id}</td>
+                              <td>{a.date}</td>
+                              <td>{a.time}</td>
+                              <td>{a.status}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+                </div>
 
-            </div>
-          </div>
-          
+              </div>
+            </motion.div>
+          )}
         </div>
       </main>
     </div>
