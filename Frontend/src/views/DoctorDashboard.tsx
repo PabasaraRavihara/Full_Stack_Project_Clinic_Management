@@ -594,7 +594,7 @@ const DoctorDashboard = () => {
           {activeTab === 'billing' && (
             <section className="doctors-section">
                 <div className="action-buttons-container">
-                    <button className={`action-btn ${billingSubTab === 'view' ? 'active' : ''}`} onClick={() => {setBillingSubTab('view'); resetForms();}}>View</button>
+                    <button className={`action-btn ${billingSubTab === 'view' ? 'active' : ''}`} onClick={() => {setBillingSubTab('view'); resetForms();}}>View History</button>
                     <button className={`action-btn ${billingSubTab === 'add' ? 'active' : ''}`} onClick={() => {setBillingSubTab('add'); resetForms();}}>Create Bill</button>
                 </div>
                 {billingSubTab === 'view' ? (
