@@ -109,37 +109,46 @@ const DoctorDashboard = () => {
   };
 
 // --- API Calls (Fetch Data) ---
-  const fetchData = async () => {
+ const fetchData = async () => {
     try {
         const config = getAuthConfig();
         const storedData = localStorage.getItem('doctorData');
-        if (!storedData) return;
-
-        const loggedInUser = JSON.parse(storedData);
-
-      
-        let docId = null;
-        if (loggedInUser.doctor && loggedInUser.doctor.id) {
-            docId = loggedInUser.doctor.id;
-        } else if (loggedInUser.id) {
-            docId = loggedInUser.id;
-        }
-
-        console.log("Found Doctor ID in Dashboard:", docId);
-        // ----------------------------------------------------
-
-        if (!docId) {
-            console.error("Doctor ID missing! Please login again.");
+        
+        if (!storedData) {
+            console.error("No data in LocalStorage!");
             return;
         }
 
-        // 1. Patients ලබා ගැනීම
+        const loggedInUser = JSON.parse(storedData);
+        console.log("Full Stored User Data:", loggedInUser); // මේක Console එකේ වැටෙනවා බලන්න
+
+        // ✅ දොස්තරගේ ID එක තිබිය හැකි හැම තැනම පරීක්ෂා කරනවා
+        let docId = null;
+        
+        if (loggedInUser.id) {
+            docId = loggedInUser.id;
+        } else if (loggedInUser.doctor && loggedInUser.doctor.id) {
+            docId = loggedInUser.doctor.id;
+        } else if (loggedInUser.doctorId) {
+            docId = loggedInUser.doctorId;
+        }
+
+        console.log("Extracted Doctor ID:", docId);
+
+        // ටේබල් පෙන්වීමට නම් අනිවාර්යයෙන්ම දත්ත ගේන්න ඕනේ
+        // ID එක නැතිවුණත් අනිත් ටේබල් පේන්න ඕනේ නිසා Appointments වලට විතරක් docId පාවිච්චි කරමු
+        
+        // 1. Patients (ID එක නැතත් මේවා පේන්න ඕනේ)
         const pRes = await api.get('/patients', config);
         setPatientsList(pRes.data);
 
-        // 2. Appointments (දැන් docId එක හරියට යනවා)
-        const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
-        setAppointmentsList(aRes.data);
+        // 2. Appointments (ID එක තියෙනවා නම් විතරක් filter කරලා ගේනවා)
+        if (docId) {
+            const aRes = await api.get(`/appointments/doctor/${docId}`, config); 
+            setAppointmentsList(aRes.data);
+        } else {
+            console.warn("Appointments filter skipped - No Doctor ID found");
+        }
 
         // 3. Records
         const rRes = await api.get('/medical-records', config);
