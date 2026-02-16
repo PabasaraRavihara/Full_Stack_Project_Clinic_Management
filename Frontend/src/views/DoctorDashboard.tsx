@@ -618,6 +618,16 @@ const handleSaveBill = async () => {
          {/* --- PATIENTS TAB --- */}
 {activeTab === 'patients' && (
   <div className="consultation-section" style={{ padding: '20px' }}>
+
+   
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+                    <button 
+                      onClick={() => { setPatientSubTab(patientSubTab === 'view' ? 'add' : 'view'); resetForms(); }}
+                      style={{ background: '#2E7D32', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <PlusIcon /> {patientSubTab === 'view' ? 'Register New Patient' : 'Back to List'}
+                    </button>
+                  </div>
     
     {patientSubTab === 'add' && (
       <div style={{ background: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', marginBottom: '30px' }}>
