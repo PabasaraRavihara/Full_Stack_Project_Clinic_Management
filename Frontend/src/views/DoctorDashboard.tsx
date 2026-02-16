@@ -251,10 +251,15 @@ const fetchData = async () => {
   };
 
   const startEditPatient = (p: Patient) => {
+     
       setNewPatient({ ...p, password: '' }); 
+      
       setIsEditing(true);
       setEditingId(p.id!);
+      
       setPatientSubTab('add');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // --- ACTIONS: APPOINTMENTS ---
