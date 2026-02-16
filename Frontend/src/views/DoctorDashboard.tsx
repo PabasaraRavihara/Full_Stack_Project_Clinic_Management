@@ -602,10 +602,10 @@ const handleSaveBill = async () => {
     </div>
 
    
-    <div style={{ background: '#e3f2fd', padding: '20px', borderRadius: '15px', display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '30px' }}>
+<div style={{ background: '#e3f2fd', padding: '20px', borderRadius: '15px', display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '30px' }}>
       <input 
         type="text" 
-        placeholder="ID එක හෝ නම මෙතන ටයිප් කරන්න..." 
+        placeholder="Enter Patient ID or Name..." 
         value={searchId}
         onChange={(e) => setSearchId(e.target.value)}
         style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc', width: '350px' }} 
@@ -613,8 +613,13 @@ const handleSaveBill = async () => {
       <button 
         onClick={() => {
           const found = patientsList.find(p => p.id?.toString() === searchId || p.firstName?.toLowerCase().includes(searchId.toLowerCase()));
-          if (found) { setSelectedPatient(found); window.scrollTo({top: 0, behavior: 'smooth'}); }
-          else { alert("පේෂන්ට් කෙනෙකු හමු නොවීය!"); }
+          if (found) { 
+              setSelectedPatient(found); 
+              window.scrollTo({top: 0, behavior: 'smooth'}); 
+          }
+          else { 
+              alert("Patient not found!"); 
+          }
         }} 
         style={{ backgroundColor: '#007bff', color: 'white', padding: '10px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
       >
