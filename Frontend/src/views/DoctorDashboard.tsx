@@ -535,52 +535,49 @@ const handleSaveBill = async () => {
             >
               {/* --- DASHBOARD TAB (Updated Stat Cards) --- */}
               {activeTab === 'dashboard' && (
-                <section className="dashboard-content" style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
-                  
-                 
-                  <div className="stat-card" style={{
-                    flex: 1,
-                    backgroundColor: 'white',
-                    borderLeft: '5px solid #2E7D32',
-                    padding: '20px',
-                    borderRadius: '10px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-                    transition: 'transform 0.3s ease'
-                  }}>
-                    <h3 style={{ color: '#666', fontSize: '1rem', marginBottom: '10px' }}>Total Patients</h3>
-                    <p style={{ color: '#2E7D32', fontSize: '2.5rem', fontWeight: 'bold', margin: 0 }}>{patientsList.length}</p>
-                  </div>
+  <div className="consultation-container" style={{ padding: '20px' }}>
+    <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
+      <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>Consulting: Lakmal Bandara</h2>
+      <div style={{ textAlign: 'right' }}>
+        <span style={{ color: '#0056b3', fontWeight: '500' }}>Welcome Doctor Kaveesha Kaviraj</span>
+      </div>
+    </header>
 
-              
-                  <div className="stat-card" style={{
-                    flex: 1,
-                    backgroundColor: 'white',
-                    borderLeft: '5px solid #1565C0',
-                    padding: '20px',
-                    borderRadius: '10px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
-                  }}>
-                    <h3 style={{ color: '#666', fontSize: '1rem', marginBottom: '10px' }}>My Appointments</h3>
-                    <p style={{ color: '#1565C0', fontSize: '2.5rem', fontWeight: 'bold', margin: 0 }}>{appointmentsList.length}</p>
-                  </div>
+    <div className="search-box" style={{ background: '#e3f2fd', padding: '30px', borderRadius: '15px', display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '30px' }}>
+      <select style={{ padding: '10px', borderRadius: '8px', border: 'none' }}><option>Find by ID</option></select>
+      <input type="text" placeholder="Enter Patient id..." style={{ padding: '10px', borderRadius: '8px', border: 'none', width: '300px' }} />
+      <button style={{ backgroundColor: '#007bff', color: 'white', padding: '10px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold' }}>Find Patient</button>
+    </div>
 
-                
-                  <div className="stat-card" style={{
-                    flex: 1,
-                    backgroundColor: 'white',
-                    borderLeft: '5px solid #FF8F00',
-                    padding: '20px',
-                    borderRadius: '10px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
-                  }}>
-                    <h3 style={{ color: '#666', fontSize: '1rem', marginBottom: '10px' }}>Total Income</h3>
-                    <p style={{ color: '#2E7D32', fontSize: '2.2rem', fontWeight: 'bold', margin: 0 }}>
-                      <span style={{ fontSize: '1.2rem' }}>Rs.</span> {income.toLocaleString()}
-                    </p>
-                  </div>
+    <div className="main-content" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', gap: '20px' }}>
+      {/* Patient Info Card */}
+      <div style={{ background: 'white', padding: '25px', borderRadius: '15px', borderLeft: '5px solid #007bff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+        <h3 style={{ marginBottom: '15px' }}>Lakmal Bandara</h3>
+        <p style={{ fontSize: '0.9rem', color: '#666' }}>Email: lkmlslnd@gmail.com</p>
+        <p style={{ fontSize: '0.9rem', color: '#666' }}>Phone: 0764522528</p>
+      </div>
 
-                </section>
-              )}
+      {/* Diagnosis Form */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <textarea placeholder="Diagnosis" style={{ height: '150px', padding: '15px', borderRadius: '12px', border: '1px solid #ddd' }}></textarea>
+        <textarea placeholder="Treatment Plan" style={{ height: '150px', padding: '15px', borderRadius: '12px', border: '1px solid #ddd' }}></textarea>
+      </div>
+
+      {/* Medical History */}
+      <div style={{ background: 'white', padding: '20px', borderRadius: '15px' }}>
+        <h4 style={{ marginBottom: '15px' }}>Previous Medical History</h4>
+        <div style={{ fontSize: '0.85rem', color: '#444' }}>
+          <p>📅 2026-02-16 | ID: #27</p>
+          <p>Diagnosis: 23 | Treatment: 23</p>
+          <hr style={{ margin: '10px 0', opacity: 0.2 }} />
+          <p>📅 2026-02-15 | ID: #1</p>
+          <p>Diagnosis: Common Cold & Fever</p>
+          <p>Treatment: Paracetamol 500mg</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
               {/* --- PATIENTS TAB --- */}
   {activeTab === 'patients' && (
