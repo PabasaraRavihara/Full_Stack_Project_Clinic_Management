@@ -629,7 +629,7 @@ const handleSaveBill = async () => {
                     </button>
                   </div>
     
-    {patientSubTab === 'add' && (
+   {patientSubTab === 'add' && (
       <div style={{ background: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', marginBottom: '30px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ margin: 0, color: '#2E7D32' }}>{isEditing ? '📝 Edit Patient Details' : '➕ Register New Patient'}</h3>
@@ -696,6 +696,20 @@ const handleSaveBill = async () => {
               style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
             />
           </div>
+          
+        
+          {!isEditing && (
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Account Password</label>
+              <input 
+                type="password" 
+                placeholder="Enter password for patient login"
+                value={newPatient.password} 
+                onChange={(e) => setNewPatient({ ...newPatient, password: e.target.value })} 
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+              />
+            </div>
+          )}
         </div>
         
         <button 
