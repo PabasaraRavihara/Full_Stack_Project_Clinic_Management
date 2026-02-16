@@ -90,6 +90,8 @@ const PatientDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      setMyAppointments([]);
+      setMyRecords([]);
       const storedData = localStorage.getItem('patientData');
       if (!storedData) {
         navigate('/patient-login');
@@ -122,7 +124,7 @@ const PatientDashboard = () => {
     };
 
     fetchData();
-  }, [navigate]);
+  }, [navigate,activeTab]);
 
   // Handle Booking
   const handleBookAppointment = async () => {

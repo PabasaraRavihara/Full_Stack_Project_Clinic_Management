@@ -148,7 +148,7 @@ const AdminDashboard = () => {
   // Fetch data (on load)
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [activeTab]);
 
   const getTitle = () => {
     switch(activeTab) {
