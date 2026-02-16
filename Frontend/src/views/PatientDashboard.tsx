@@ -44,6 +44,7 @@ const PatientDashboard = () => {
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(true);
+  const today = new Date().toISOString().split('T')[0];
   
   // States
   const [activeTab, setActiveTab] = useState<'dashboard' | 'appointments' | 'records'>('dashboard');
@@ -226,11 +227,11 @@ const PatientDashboard = () => {
 
   <div className="dashboard-content-wrapper" style={{padding: '0 30px'}}>
     
-    {/* ✅ පියවර 1: දත්ත load වන තුරු Spinner එක පෙන්වයි */}
+   
     {isLoading ? (
       <LoadingSpinner />
     ) : (
-      /* ✅ පියවර 2: දත්ත ලැබුණු පසු ඇනිමේෂන් එකක් සමඟ content එක පෙන්වයි */
+     
       <motion.div 
         initial={{ opacity: 0, y: 15 }} 
         animate={{ opacity: 1, y: 0 }}
@@ -353,7 +354,10 @@ const PatientDashboard = () => {
                           </div>
                           <div>
                               <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Date</label>
-                              <input type="date" value={newBooking.date} onChange={e => setNewBooking({...newBooking, date: e.target.value})} style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}} />
+                              <input type="date" value={newBooking.date}
+                              min={today}
+                               onChange={e => setNewBooking({...newBooking, date: e.target.value})} 
+                               style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}} />
                           </div>
                           <div>
                               <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Time Slot</label>
