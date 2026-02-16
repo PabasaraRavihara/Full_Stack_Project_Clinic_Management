@@ -613,7 +613,7 @@ const handleSaveBill = async () => {
                 </section>
               )}
 
-              {/* --- PATIENTS TAB --- */}
+          {/* --- PATIENTS TAB --- */}
 {activeTab === 'patients' && (
   <div className="consultation-section" style={{ padding: '20px' }}>
     
@@ -684,7 +684,7 @@ const handleSaveBill = async () => {
       </div>
     )}
 
-  
+    {/* --- 4. Registered Patients Table --- */}
     <div style={{ background: 'white', padding: '20px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
       <h3 style={{ fontSize: '1.1rem', marginBottom: '15px', color: '#333' }}>All Registered Patients</h3>
       <div style={{ overflowX: 'auto' }}>
@@ -704,23 +704,32 @@ const handleSaveBill = async () => {
                 <td style={{ padding: '12px', fontWeight: '500' }}>{p.firstName} {p.lastName}</td>
                 <td style={{ padding: '12px', color: '#666' }}>{p.email}</td>
                 <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
-                 
+                  
+              
                   <button 
                     onClick={() => { setSelectedPatient(p); window.scrollTo({top: 0, behavior: 'smooth'}); }}
                     style={{ background: '#0056b3', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
                   >
                     Select
                   </button>
-               
+
+                 
                   <button 
-                    onClick={() => startEditPatient(p)}
+                    onClick={() => {
+                    
+                        startEditPatient(p); 
+                    }}
                     style={{ background: '#FFC107', color: 'black', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
                   >
                     Edit
                   </button>
-                  {/* Delete Patient */}
+
+                
                   <button 
-                    onClick={() => handleDeletePatient(p.id!)}
+                    onClick={() => {
+                        
+                        handleDeletePatient(p.id!);
+                    }}
                     style={{ background: '#F44336', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
                   >
                     Delete
@@ -732,7 +741,6 @@ const handleSaveBill = async () => {
         </table>
       </div>
     </div>
-
   </div>
 )}
 
