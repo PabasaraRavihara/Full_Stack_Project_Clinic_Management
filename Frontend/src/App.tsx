@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { BrowserRouter, Routes, Route, useNavigate, Navigate ,useLocation } from 'react-router-dom';
 import './App.css';
-
+import { Toaster } from 'react-hot-toast';
 // Import Types
 import type { ViewMode } from './types/types.ts';
 
@@ -109,6 +109,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
 function App() {
   return (
     <BrowserRouter>
+    <Toaster position="top-right" reverseOrder={false} />
       {/* 1. Animated Routes Wrapper  */}
       <AnimatedRoutes />
     </BrowserRouter>

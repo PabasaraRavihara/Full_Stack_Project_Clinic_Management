@@ -4,6 +4,7 @@ import api from '../api/axios.Config';
 import { UserIcon, SignInIcon, ListIcon, PlusIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 
 // --- Interfaces ---
 interface Patient {
@@ -56,6 +57,16 @@ interface Billing {
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+  useEffect(() => {
+  const timer = setInterval(() => {
+    setCurrentTime(new Date());
+  }, 1000);
+
+
+  return () => clearInterval(timer);
+}, []);
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -200,7 +211,13 @@ const fetchData = async () => {
             alert("Patient Updated!");
         } else {
             await api.post('/patients', newPatient, config);
-            alert("Patient Added Successfully!");
+            toast.success('Patient Registered Successfully!', {
+  duration: 4000,
+  style: {
+    background: '#2E7D32',
+    color: '#fff',
+  },
+});
         }
         
         resetForms();
@@ -208,7 +225,7 @@ const fetchData = async () => {
         setPatientSubTab('view');
     } catch (error) { 
         console.error(error);
-        alert("Error Saving Patient! (Check if Email is duplicate)"); 
+       toast.error('Failed to save patient. Please try again.'); 
     }
   };
 
@@ -462,13 +479,45 @@ const handleSaveBill = async () => {
         <div className="dashboard-logout"><button onClick={handleLogout} className="nav-item"><SignInIcon /> <span>Logout</span></button></div>
       </div>
 
-      {/* --- MAIN CONTENT --- */}
-      <main className="dashboard-main">
-        <header className="dashboard-header"><h1>Doctor Dashboard</h1></header>
+{/* --- MAIN CONTENT AREA --- */}
+      <main className="dashboard-main" style={{ backgroundColor: '#f8f9fa' }}>
         
-        <div className="dashboard-content-wrapper">
+       
+        <header className="dashboard-header" style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          padding: '15px 30px',
+          background: 'white',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+          marginBottom: '20px'
+        }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '1.6rem', color: '#333' }}>Doctor Dashboard</h1>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#666', fontWeight: '500' }}>
+              
+              {currentTime.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })} | <span style={{ color: '#2E7D32' }}>{currentTime.toLocaleTimeString()}</span>
+            </p>
+          </div>
+
+          <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '10px' }}>
+             <div style={{ textAlign: 'right' }}>
+               <span style={{ display: 'block', fontSize: '0.75rem', color: '#888' }}>Welcome back,</span>
+               <span style={{ fontWeight: 'bold', color: '#2E7D32' }}>Dr. Specialist 👋</span>
+             </div>
+             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e8f5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2e7d32' }}>
+                <UserIcon />
+             </div>
+          </div>
+        </header>
+        
+        <div className="dashboard-content-wrapper" style={{ padding: '0 30px' }}>
           
-          {/* ✅ Loading Logic: isLoading true  */}
           {isLoading ? (
             <LoadingSpinner />
           ) : (
@@ -477,19 +526,59 @@ const handleSaveBill = async () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              {/* --- DASHBOARD TAB --- */}
+              {/* --- DASHBOARD TAB (Updated Stat Cards) --- */}
               {activeTab === 'dashboard' && (
-                <section className="dashboard-content">
-                  <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>Total Patients</h3><p style={{color: '#2E7D32', fontSize: '2.5rem'}}>{patientsList.length}</p></div>
-                  <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>My Appointments</h3><p style={{color: '#1565C0', fontSize: '2.5rem'}}>{appointmentsList.length}</p></div>
-                  <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>Income</h3><p style={{color: '#2E7D32', fontSize: '2.5rem'}}>Rs. {income}</p></div>
+                <section className="dashboard-content" style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
+                  
+                 
+                  <div className="stat-card" style={{
+                    flex: 1,
+                    backgroundColor: 'white',
+                    borderLeft: '5px solid #2E7D32',
+                    padding: '20px',
+                    borderRadius: '10px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+                    transition: 'transform 0.3s ease'
+                  }}>
+                    <h3 style={{ color: '#666', fontSize: '1rem', marginBottom: '10px' }}>Total Patients</h3>
+                    <p style={{ color: '#2E7D32', fontSize: '2.5rem', fontWeight: 'bold', margin: 0 }}>{patientsList.length}</p>
+                  </div>
+
+              
+                  <div className="stat-card" style={{
+                    flex: 1,
+                    backgroundColor: 'white',
+                    borderLeft: '5px solid #1565C0',
+                    padding: '20px',
+                    borderRadius: '10px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+                  }}>
+                    <h3 style={{ color: '#666', fontSize: '1rem', marginBottom: '10px' }}>My Appointments</h3>
+                    <p style={{ color: '#1565C0', fontSize: '2.5rem', fontWeight: 'bold', margin: 0 }}>{appointmentsList.length}</p>
+                  </div>
+
+                
+                  <div className="stat-card" style={{
+                    flex: 1,
+                    backgroundColor: 'white',
+                    borderLeft: '5px solid #FF8F00',
+                    padding: '20px',
+                    borderRadius: '10px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+                  }}>
+                    <h3 style={{ color: '#666', fontSize: '1rem', marginBottom: '10px' }}>Total Income</h3>
+                    <p style={{ color: '#2E7D32', fontSize: '2.2rem', fontWeight: 'bold', margin: 0 }}>
+                      <span style={{ fontSize: '1.2rem' }}>Rs.</span> {income.toLocaleString()}
+                    </p>
+                  </div>
+
                 </section>
               )}
 
               {/* --- PATIENTS TAB --- */}
   {activeTab === 'patients' && (
   <section className="doctors-section">
-    {/* Action Buttons සහ Search Bar එක එකම container එකක් ඇතුළට දාමු */}
+   
     <div className="action-buttons-container" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
       <button 
         className={`action-btn ${patientSubTab === 'view' ? 'active' : ''}`} 
@@ -505,7 +594,7 @@ const handleSaveBill = async () => {
         <PlusIcon /> Add Patient
       </button>
 
-      {/* සර්ච් බාර් එක පෙන්වන්නේ ලිස්ට් එක බලන වෙලාවට විතරයි */}
+     
       {patientSubTab === 'view' && (
         <input 
           type="text" 
@@ -516,43 +605,71 @@ const handleSaveBill = async () => {
             padding: '8px', 
             borderRadius: '5px', 
             border: '1px solid #ccc', 
-            marginLeft: 'auto', // මේකෙන් තමයි සර්ච් බාර් එක දකුණු පැත්තට යන්නේ
+            marginLeft: 'auto', 
             width: '250px' 
           }}
         />
       )}
-    </div> {/* action-buttons-container අවසානය */}
+    </div>
 
-    {/* පේෂන්ට්ලා පෙන්වන Table එක හෝ Form එක මාරුවෙන් මාරුවට පෙන්වීම */}
-    {patientSubTab === 'view' ? (
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {patientsList
-              .filter(p => 
-                `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                p.email.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-              .map(p => (
-                <tr key={p.id}>
-                  <td>{p.id}</td>
-                  <td>{p.firstName} {p.lastName}</td>
-                  <td>{p.email}</td>
-                  <td>{p.phone}</td>
-                  <td>
-                    <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditPatient(p)}>Edit</button>
-                    <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeletePatient(p.id!)}>Delete</button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-    ) : (
-      /* Registration/Edit Form එක */
+   
+  {patientSubTab === 'view' ? (
+
+  patientsList.length === 0 ? (
+    
+    <div style={{ 
+      textAlign: 'center', 
+      padding: '60px 20px', 
+      background: 'white', 
+      borderRadius: '12px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+      color: '#a0aec0',
+      marginTop: '20px'
+    }}>
+      <div style={{ 
+            marginBottom: '15px', 
+            opacity: 0.6, 
+            display: 'flex', 
+            justifyContent: 'center',
+            fontSize: '64px', 
+            width: '100%'
+          }}>
+             <UsersIcon />
+          </div>
+      <h3 style={{ color: '#4a5568', marginBottom: '8px' }}>No Patients Registered Yet</h3>
+      <p style={{ fontSize: '0.95rem' }}>It looks like your patient list is empty. Click <strong>"Add Patient"</strong> to register someone new.</p>
+    </div>
+  ) : (
+  
+    <div className="table-container">
+      <table className="data-table">
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {patientsList
+            .filter(p => 
+              `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              p.email.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .map(p => (
+              <tr key={p.id}>
+                <td>{p.id}</td>
+                <td>{p.firstName} {p.lastName}</td>
+                <td>{p.email}</td>
+                <td>{p.phone}</td>
+                <td>
+                  <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditPatient(p)}>Edit</button>
+                  <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeletePatient(p.id!)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
+  )
+) : (
+      /* Registration/Edit Form */
       <div className="form-container">
         <h3>{isEditing ? 'Edit Patient' : 'Register New Patient'}</h3>
         <form className="admin-form">
@@ -577,7 +694,7 @@ const handleSaveBill = async () => {
   </section>
 )}
 
- {/* --- APPOINTMENTS TAB --- */}
+{/* --- APPOINTMENTS TAB --- */}
 {activeTab === 'appointments' && (
   <section className="doctors-section">
     <div className="table-container">
@@ -605,95 +722,159 @@ const handleSaveBill = async () => {
         />
       </div>
 
-      <table className="data-table">
-        <thead>
-          <tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-          {appointmentsList
-            .filter(a => {
-              const fullName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Unknown';
-              return fullName.toLowerCase().includes(searchTerm.toLowerCase());
-            })
-            .map(a => (
-              <tr key={a.id}>
-                <td>{a.id}</td>
-                <td>{a.date}</td>
-                <td>{a.time}</td>
-                <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
-                <td>
-                  <span style={{ 
-                    fontWeight: 'bold', 
-                    color: a.status === 'PENDING' ? 'orange' : a.status === 'APPROVED' ? 'green' : 'red' 
-                  }}>
-                    {a.status}
-                  </span>
-                </td>
-                <td>
-                  {a.status === 'PENDING' ? (
-                    <>
-                      <button style={{ ...btnStyle, background: '#28a745' }} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
-                      <button style={{ ...btnStyle, background: '#dc3545' }} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
-                    </>
-                  ) : <span style={{ fontSize: '0.8rem', color: '#777' }}>Action Taken</span>}
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
       
-      
-      {appointmentsList.filter(a => {
-        const fullName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Unknown';
-        return fullName.toLowerCase().includes(searchTerm.toLowerCase());
-      }).length === 0 && (
-        <p style={{ textAlign: 'center', padding: '20px', color: '#777' }}>No matching appointments found.</p>
+      {appointmentsList.length === 0 ? (
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '60px 20px', 
+          background: 'white', 
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          color: '#a0aec0',
+          marginTop: '20px'
+        }}>
+         
+          <div style={{ 
+            marginBottom: '15px', 
+            opacity: 0.6, 
+            display: 'flex', 
+            justifyContent: 'center',
+            fontSize: '64px' 
+          }}>
+             <CalendarIcon />
+          </div>
+          <h3 style={{ color: '#4a5568', marginBottom: '8px' }}>No Appointments Found</h3>
+          <p style={{ fontSize: '0.95rem' }}>You don't have any appointment requests at the moment.</p>
+        </div>
+      ) : (
+       
+        <>
+          <table className="data-table">
+            <thead>
+              <tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {appointmentsList
+                .filter(a => {
+                  const fullName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Unknown';
+                  return fullName.toLowerCase().includes(searchTerm.toLowerCase());
+                })
+                .map(a => (
+                  <tr key={a.id}>
+                    <td>{a.id}</td>
+                    <td>{a.date}</td>
+                    <td>{a.time}</td>
+                    <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
+                    <td>
+                      <span style={{ 
+                        fontWeight: 'bold', 
+                        color: a.status === 'PENDING' ? 'orange' : a.status === 'APPROVED' ? 'green' : 'red' 
+                      }}>
+                        {a.status}
+                      </span>
+                    </td>
+                    <td>
+                      {a.status === 'PENDING' ? (
+                        <>
+                          <button style={{ ...btnStyle, background: '#28a745' }} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
+                          <button style={{ ...btnStyle, background: '#dc3545' }} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
+                        </>
+                      ) : <span style={{ fontSize: '0.8rem', color: '#777' }}>Action Taken</span>}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+
+          
+          {appointmentsList.filter(a => {
+            const fullName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Unknown';
+            return fullName.toLowerCase().includes(searchTerm.toLowerCase());
+          }).length === 0 && (
+            <p style={{ textAlign: 'center', padding: '20px', color: '#777' }}>No matching appointments found for "{searchTerm}".</p>
+          )}
+        </>
       )}
     </div>
   </section>
 )}
+            {/* --- RECORDS TAB --- */}
+{activeTab === 'records' && (
+  <section className="doctors-section">
+    <div className="action-buttons-container">
+      <button className={`action-btn ${recordSubTab === 'view' ? 'active' : ''}`} onClick={() => {setRecordSubTab('view'); resetForms();}}>
+        <ListIcon /> View List
+      </button>
+      <button className={`action-btn ${recordSubTab === 'add' ? 'active' : ''}`} onClick={() => {setRecordSubTab('add'); resetForms();}}>
+        <PlusIcon /> Add Record
+      </button>
+    </div>
 
-              {/* --- RECORDS TAB --- */}
-              {activeTab === 'records' && (
-                <section className="doctors-section">
-                  <div className="action-buttons-container">
-                    <button className={`action-btn ${recordSubTab === 'view' ? 'active' : ''}`} onClick={() => {setRecordSubTab('view'); resetForms();}}>View List</button>
-                    <button className={`action-btn ${recordSubTab === 'add' ? 'active' : ''}`} onClick={() => {setRecordSubTab('add'); resetForms();}}>Add Record</button>
-                  </div>
-                  {recordSubTab === 'view' ? (
-                    <div className="table-container">
-                      <table className="data-table">
-                        <thead><tr><th>Date</th><th>Patient</th><th>Diagnosis</th><th>Actions</th></tr></thead>
-                        <tbody>
-                          {recordsList.map(r => (
-                            <tr key={r.id}>
-                              <td>{r.recordDate}</td><td>{r.patient ? r.patient.firstName : 'N/A'}</td><td>{r.diagnosis}</td>
-                              <td>
-                                <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditRecord(r)}>Edit</button>
-                                <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteRecord(r.id)}>Delete</button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="form-container">
-                      <h3>{isEditing ? 'Edit Medical Record' : 'Add Medical Record'}</h3>
-                      <form className="admin-form">
-                        <div className="form-group"><label>Patient ID</label><input type="number" value={newRecord.patientId} onChange={e => setNewRecord({...newRecord, patientId: e.target.value})} /></div>
-                        <div className="form-group"><label>Doctor ID</label><input type="number" value={newRecord.doctorId} onChange={e => setNewRecord({...newRecord, doctorId: e.target.value})} /></div>
-                        <div className="form-group"><label>Record Date</label><input type="date" value={newRecord.recordDate} onChange={e => setNewRecord({...newRecord, recordDate: e.target.value})} /></div>
-                        <div className="form-group"><label>Diagnosis</label><input value={newRecord.diagnosis} onChange={e => setNewRecord({...newRecord, diagnosis: e.target.value})} /></div>
-                        <div className="form-group"><label>Treatment</label><input value={newRecord.treatment} onChange={e => setNewRecord({...newRecord, treatment: e.target.value})} /></div>
-                        <button type="button" className="save-btn" style={{background:'#2E7D32'}} onClick={handleSaveRecord}>{isEditing ? 'Update Record' : 'Save Record'}</button>
-                      </form>
-                    </div>
-                  )}
-                </section>
-              )}
-
- {/* --- BILLING TAB --- */}
+    {recordSubTab === 'view' ? (
+   
+      recordsList.length === 0 ? (
+       
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '60px 20px', 
+          background: 'white', 
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          color: '#a0aec0',
+          marginTop: '20px'
+        }}>
+          <div style={{ 
+            marginBottom: '15px', 
+            opacity: 0.6, 
+            display: 'flex', 
+            justifyContent: 'center',
+            fontSize: '64px' 
+          }}>
+             <ListIcon />
+          </div>
+          <h3 style={{ color: '#4a5568', marginBottom: '8px' }}>No Medical Records Found</h3>
+          <p style={{ fontSize: '0.95rem' }}>There are no medical history records to display. Click <strong>"Add Record"</strong> to create a new one.</p>
+        </div>
+      ) : (
+       
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr><th>Date</th><th>Patient</th><th>Diagnosis</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {recordsList.map(r => (
+                <tr key={r.id}>
+                  <td>{r.recordDate}</td>
+                  <td>{r.patient ? `${r.patient.firstName} ${r.patient.lastName}` : 'N/A'}</td>
+                  <td>{r.diagnosis}</td>
+                  <td>
+                    <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditRecord(r)}>Edit</button>
+                    <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteRecord(r.id)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    ) : (
+      
+      <div className="form-container">
+        <h3>{isEditing ? 'Edit Medical Record' : 'Add Medical Record'}</h3>
+        <form className="admin-form">
+          <div className="form-group"><label>Patient ID</label><input type="number" value={newRecord.patientId} onChange={e => setNewRecord({...newRecord, patientId: e.target.value})} /></div>
+          <div className="form-group"><label>Doctor ID</label><input type="number" value={newRecord.doctorId} onChange={e => setNewRecord({...newRecord, doctorId: e.target.value})} /></div>
+          <div className="form-group"><label>Record Date</label><input type="date" value={newRecord.recordDate} onChange={e => setNewRecord({...newRecord, recordDate: e.target.value})} /></div>
+          <div className="form-group"><label>Diagnosis</label><input value={newRecord.diagnosis} onChange={e => setNewRecord({...newRecord, diagnosis: e.target.value})} /></div>
+          <div className="form-group"><label>Treatment</label><input value={newRecord.treatment} onChange={e => setNewRecord({...newRecord, treatment: e.target.value})} /></div>
+          <button type="button" className="save-btn" style={{background:'#2E7D32'}} onClick={handleSaveRecord}>{isEditing ? 'Update Record' : 'Save Record'}</button>
+        </form>
+      </div>
+    )}
+  </section>
+)}
+{/* --- BILLING TAB --- */}
 {activeTab === 'billing' && (
   <section className="doctors-section">
     <div className="action-buttons-container" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
@@ -701,16 +882,15 @@ const handleSaveBill = async () => {
         className={`action-btn ${billingSubTab === 'view' ? 'active' : ''}`} 
         onClick={() => { setBillingSubTab('view'); resetForms(); setSearchTerm(''); }}
       >
-        View History
+        <ListIcon /> View History
       </button>
       <button 
         className={`action-btn ${billingSubTab === 'add' ? 'active' : ''}`} 
         onClick={() => { setBillingSubTab('add'); resetForms(); }}
       >
-        Create Bill
+        <PlusIcon /> Create Bill
       </button>
 
-    
       {billingSubTab === 'view' && (
         <input 
           type="text" 
@@ -729,65 +909,104 @@ const handleSaveBill = async () => {
     </div>
 
     {billingSubTab === 'view' ? (
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr><th>Bill ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {billingsList
-              .filter(b => 
-           
-                b.billId.toString().includes(searchTerm) || 
-                b.status.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-              .map(b => (
-                <tr key={b.billId}>
-                  <td>{b.billId}</td>
-                  <td>Rs. {b.amount}</td>
-                  <td>
-                    <span style={{ 
-                      color: b.status === 'PAID' ? 'green' : 'red', 
-                      fontWeight: 'bold' 
-                    }}>
-                      {b.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button style={{ ...btnStyle, background: '#007BFF' }} onClick={() => printBill(b)}>Print</button>
-                    <button style={{ ...btnStyle, background: '#FFC107', color: 'black' }} onClick={() => startEditBill(b)}>Edit</button>
-                    <button style={{ ...btnStyle, background: '#F44336' }} onClick={() => handleDeleteBill(b.billId)}>Delete</button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+     
+      billingsList.length === 0 ? (
+     
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '60px 20px', 
+          background: 'white', 
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          color: '#a0aec0',
+          marginTop: '20px'
+        }}>
+          <div style={{ 
+            marginBottom: '15px', 
+            opacity: 0.6, 
+            display: 'flex', 
+            justifyContent: 'center',
+            fontSize: '64px' 
+          }}>
+             <ListIcon />
+          </div>
+          <h3 style={{ color: '#4a5568', marginBottom: '8px' }}>No Billing History</h3>
+          <p style={{ fontSize: '0.95rem' }}>It looks like there are no invoices generated yet. Click <strong>"Create Bill"</strong> to start.</p>
+        </div>
+      ) : (
+       
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr><th>Bill ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {billingsList
+                .filter(b => 
+                  b.billId.toString().includes(searchTerm) || 
+                  b.status.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .map(b => (
+                  <tr key={b.billId}>
+                    <td>#{b.billId}</td>
+                    <td>Rs. {Number(b.amount).toFixed(2)}</td>
+                    <td>
+                      <span style={{ 
+                        color: b.status === 'PAID' ? '#2e7d32' : '#d32f2f', 
+                        fontWeight: 'bold',
+                        padding: '4px 8px',
+                        background: b.status === 'PAID' ? '#e8f5e9' : '#ffebee',
+                        borderRadius: '4px',
+                        fontSize: '0.85rem'
+                      }}>
+                        {b.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button style={{ ...btnStyle, background: '#007BFF' }} onClick={() => printBill(b)}>Print</button>
+                      <button style={{ ...btnStyle, background: '#FFC107', color: 'black' }} onClick={() => startEditBill(b)}>Edit</button>
+                      <button style={{ ...btnStyle, background: '#F44336' }} onClick={() => handleDeleteBill(b.billId)}>Delete</button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
 
-   
-        {billingsList.filter(b => 
-          b.billId.toString().includes(searchTerm) || 
-          b.status.toLowerCase().includes(searchTerm.toLowerCase())
-        ).length === 0 && (
-          <p style={{ textAlign: 'center', padding: '20px', color: '#777' }}>No matching billing records found.</p>
-        )}
-      </div>
+        
+          {billingsList.filter(b => 
+            b.billId.toString().includes(searchTerm) || 
+            b.status.toLowerCase().includes(searchTerm.toLowerCase())
+          ).length === 0 && (
+            <p style={{ textAlign: 'center', padding: '20px', color: '#777' }}>No matching records found for "{searchTerm}".</p>
+          )}
+        </div>
+      )
     ) : (
+      
       <div className="form-container">
-        <h3>{isEditing ? 'Edit Bill' : 'Create Bill'}</h3>
+        <h3>{isEditing ? 'Edit Bill' : 'Create New Bill'}</h3>
         <form className="admin-form">
           <div className="form-group">
-            <label>Appt ID</label>
-            <input type="number" value={newBill.appointmentId} onChange={e => setNewBill({ ...newBill, appointmentId: e.target.value })} />
+            <label>Appointment ID</label>
+            <input type="number" value={newBill.appointmentId} onChange={e => setNewBill({ ...newBill, appointmentId: e.target.value })} placeholder="Enter Appointment ID" />
           </div>
           <div className="form-group">
-            <label>Amount</label>
-            <input type="number" value={newBill.amount} onChange={e => setNewBill({ ...newBill, amount: e.target.value })} />
+            <label>Amount (Rs.)</label>
+            <input type="number" value={newBill.amount} onChange={e => setNewBill({ ...newBill, amount: e.target.value })} placeholder="0.00" />
           </div>
           <div className="form-group">
-            <label>Status</label>
-            <input type="text" value={newBill.status} onChange={e => setNewBill({ ...newBill, status: e.target.value })} />
+            <label>Payment Status</label>
+            <select 
+                value={newBill.status} 
+                onChange={e => setNewBill({ ...newBill, status: e.target.value })}
+                style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
+            >
+                <option value="PAID">PAID</option>
+                <option value="UNPAID">UNPAID</option>
+                <option value="PENDING">PENDING</option>
+            </select>
           </div>
-          <button type="button" className="save-btn" onClick={handleSaveBill}>{isEditing ? 'Update' : 'Generate Bill'}</button>
+          <button type="button" className="save-btn" onClick={handleSaveBill}>{isEditing ? 'Update Bill' : 'Generate Bill'}</button>
         </form>
       </div>
     )}
