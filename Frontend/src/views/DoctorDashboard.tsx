@@ -74,6 +74,12 @@ const DoctorDashboard = () => {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  //  Consultation UI States
+const [searchId, setSearchId] = useState(''); 
+const [selectedPatient, setSelectedPatient] = useState<any>(null);
+const [diagnosis, setDiagnosis] = useState('');
+const [treatmentPlan, setTreatmentPlan] = useState('');
+
   // --- States ---
   const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'appointments' | 'records' | 'billing'>('dashboard');
   
@@ -583,122 +589,105 @@ const handleSaveBill = async () => {
               )}
 
               {/* --- PATIENTS TAB --- */}
-  {activeTab === 'patients' && (
-  <section className="doctors-section">
-   
-    <div className="action-buttons-container" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-      <button 
-        className={`action-btn ${patientSubTab === 'view' ? 'active' : ''}`} 
-        onClick={() => {setPatientSubTab('view'); resetForms();}}
-      >
-        <ListIcon /> View List
-      </button>
-      
-      <button 
-        className={`action-btn ${patientSubTab === 'add' ? 'active' : ''}`} 
-        onClick={() => {setPatientSubTab('add'); resetForms();}}
-      >
-        <PlusIcon /> Add Patient
-      </button>
-
-     
-      {patientSubTab === 'view' && (
-        <input 
-          type="text" 
-          placeholder="Search by name or email..." 
-          value={searchTerm} 
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ 
-            padding: '8px', 
-            borderRadius: '5px', 
-            border: '1px solid #ccc', 
-            marginLeft: 'auto', 
-            width: '250px' 
-          }}
-        />
-      )}
-    </div>
-
-   
-  {patientSubTab === 'view' ? (
-
-  patientsList.length === 0 ? (
+{activeTab === 'patients' && (
+  <div className="consultation-section" style={{ padding: '20px' }}>
     
-    <div style={{ 
-      textAlign: 'center', 
-      padding: '60px 20px', 
-      background: 'white', 
-      borderRadius: '12px',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-      color: '#a0aec0',
-      marginTop: '20px'
-    }}>
-      <div style={{ 
-            marginBottom: '15px', 
-            opacity: 0.6, 
-            display: 'flex', 
-            justifyContent: 'center',
-            fontSize: '64px', 
-            width: '100%'
-          }}>
-             <UsersIcon />
-          </div>
-      <h3 style={{ color: '#4a5568', marginBottom: '8px' }}>No Patients Registered Yet</h3>
-      <p style={{ fontSize: '0.95rem' }}>It looks like your patient list is empty. Click <strong>"Add Patient"</strong> to register someone new.</p>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
+        Consulting: {selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : "කරුණාකර පේෂන්ට් කෙනෙකු තෝරන්න"}
+      </h2>
+      <div style={{ textAlign: 'right', color: '#0056b3' }}>
+        ආයුබෝවන්, <b>Dr. {JSON.parse(localStorage.getItem('doctorData') || '{}').name || 'Specialist'}</b>
+      </div>
     </div>
-  ) : (
-  
-    <div className="table-container">
-      <table className="data-table">
-        <thead>
-          <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-          {patientsList
-            .filter(p => 
-              `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              p.email.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            .map(p => (
-              <tr key={p.id}>
-                <td>{p.id}</td>
-                <td>{p.firstName} {p.lastName}</td>
-                <td>{p.email}</td>
-                <td>{p.phone}</td>
-                <td>
-                  <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditPatient(p)}>Edit</button>
-                  <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeletePatient(p.id!)}>Delete</button>
+
+   
+    <div style={{ background: '#e3f2fd', padding: '20px', borderRadius: '15px', display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '30px' }}>
+      <input 
+        type="text" 
+        placeholder="ID එක හෝ නම මෙතන ටයිප් කරන්න..." 
+        value={searchId}
+        onChange={(e) => setSearchId(e.target.value)}
+        style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc', width: '350px' }} 
+      />
+      <button 
+        onClick={() => {
+          const found = patientsList.find(p => p.id?.toString() === searchId || p.firstName?.toLowerCase().includes(searchId.toLowerCase()));
+          if (found) { setSelectedPatient(found); window.scrollTo({top: 0, behavior: 'smooth'}); }
+          else { alert("පේෂන්ට් කෙනෙකු හමු නොවීය!"); }
+        }} 
+        style={{ backgroundColor: '#007bff', color: 'white', padding: '10px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+      >
+        Find Patient
+      </button>
+    </div>
+
+    
+    {selectedPatient && (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '20px', marginBottom: '40px' }}>
+        <div style={{ background: 'white', padding: '20px', borderRadius: '15px', borderLeft: '5px solid #007bff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+          <h3 style={{ fontSize: '1.2rem' }}>{selectedPatient.firstName} {selectedPatient.lastName}</h3>
+          <p style={{ fontSize: '0.85rem', color: '#666' }}>ID: #{selectedPatient.id}</p>
+          <p style={{ fontSize: '0.85rem', color: '#666' }}>Phone: {selectedPatient.phone}</p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <textarea placeholder="Diagnosis" value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)} style={{ height: '100px', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }} />
+          <textarea placeholder="Treatment Plan" value={treatmentPlan} onChange={(e) => setTreatmentPlan(e.target.value)} style={{ height: '100px', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }} />
+          <button 
+            onClick={handleSaveRecord} 
+            style={{ backgroundColor: '#28a745', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            Finish Consultation & Save Record
+          </button>
+        </div>
+
+        <div style={{ background: 'white', padding: '15px', borderRadius: '15px', maxHeight: '250px', overflowY: 'auto' }}>
+          <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', borderBottom: '1px solid #eee' }}>History</h4>
+          {recordsList.filter(r => r.patient?.id === selectedPatient.id).map(r => (
+            <div key={r.id} style={{ fontSize: '0.75rem', marginBottom: '10px', padding: '8px', background: '#f8f9fa', borderRadius: '5px' }}>
+              <p>📅 {r.recordDate} - {r.diagnosis}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+
+    <div style={{ background: 'white', padding: '20px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+      <h3 style={{ fontSize: '1.1rem', marginBottom: '15px', color: '#333' }}>All Registered Patients</h3>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #eee' }}>
+              <th style={{ padding: '12px' }}>ID</th>
+              <th style={{ padding: '12px' }}>Name</th>
+              <th style={{ padding: '12px' }}>Email</th>
+              <th style={{ padding: '12px' }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {patientsList.map(p => (
+              <tr key={p.id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={{ padding: '12px' }}>#{p.id}</td>
+                <td style={{ padding: '12px', fontWeight: '500' }}>{p.firstName} {p.lastName}</td>
+                <td style={{ padding: '12px', color: '#666' }}>{p.email}</td>
+                <td style={{ padding: '12px' }}>
+                  <button 
+                    onClick={() => { setSelectedPatient(p); window.scrollTo({top: 0, behavior: 'smooth'}); }}
+                    style={{ background: '#0056b3', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
+                  >
+                    Select to Consult
+                  </button>
                 </td>
               </tr>
             ))}
-        </tbody>
-      </table>
-    </div>
-  )
-) : (
-      /* Registration/Edit Form */
-      <div className="form-container">
-        <h3>{isEditing ? 'Edit Patient' : 'Register New Patient'}</h3>
-        <form className="admin-form">
-          <div className="form-row">
-            <div className="form-group"><label>First Name</label><input value={newPatient.firstName} onChange={e => setNewPatient({...newPatient, firstName: e.target.value})}/></div>
-            <div className="form-group"><label>Last Name</label><input value={newPatient.lastName} onChange={e => setNewPatient({...newPatient, lastName: e.target.value})}/></div>
-          </div>
-          <div className="form-row">
-            <div className="form-group"><label>Email</label><input value={newPatient.email} onChange={e => setNewPatient({...newPatient, email: e.target.value})}/></div>
-            <div className="form-group"><label>Phone</label><input value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})}/></div>
-          </div>
-          <div className="form-row">
-            <div className="form-group"><label>Age</label><input value={newPatient.age} onChange={e => setNewPatient({...newPatient, age: e.target.value})}/></div>
-            <div className="form-group"><label>Gender</label><input value={newPatient.gender} onChange={e => setNewPatient({...newPatient, gender: e.target.value})}/></div>
-          </div>
-          <div className="form-group"><label>Address</label><input value={newPatient.address} onChange={e => setNewPatient({...newPatient, address: e.target.value})}/></div>
-          <div className="form-group"><label>Password</label><input type="text" placeholder={isEditing ? "Leave blank to keep current" : "Set Password"} value={newPatient.password || ''} onChange={e => setNewPatient({...newPatient, password: e.target.value})}/></div>
-          <button type="button" className="save-btn" onClick={handleSavePatient}>{isEditing ? 'Update Patient' : 'Save Patient'}</button>
-        </form>
+          </tbody>
+        </table>
       </div>
-    )}
-  </section>
+    </div>
+
+  </div>
 )}
 
 {/* --- APPOINTMENTS TAB --- */}
