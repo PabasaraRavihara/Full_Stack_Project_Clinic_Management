@@ -81,13 +81,25 @@ const PatientDashboard = () => {
   };
   const timeSlots = generateTimeSlots();
 
-  // Logout Function
+ 
+  const bookedSlots = myAppointments
+    .filter(app => 
+      app.doctor?.id === parseInt(newBooking.doctorId) && 
+      app.date === newBooking.date &&
+      app.status !== 'CANCELLED'
+    )
+    .map(app => {
+      
+      return app.time.substring(0, 5);
+    });
+
+  // --- 2. Logout Function 
   const handleLogout = () => {
     localStorage.removeItem('patientData');
     navigate('/patient-login');
   };
 
-  // Data Fetching 
+  // --- 3. Data Fetching ---
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -101,13 +113,16 @@ const PatientDashboard = () => {
       
       try {
         const parsedPatient = JSON.parse(storedData);
-        console.log("Logged In Patient Data:", parsedPatient); // Console එකේ Data ටික බලාගන්න මේක දැම්මා
+        console.log("Logged In Patient Data:", parsedPatient); 
         setPatient(parsedPatient);
 
         setLoading(true);
+       
         const appRes = await api.get('/appointments');
+        
+       
         const patientAppointments = appRes.data.filter((a: Appointment) => a.patient?.id === parsedPatient.id);
-        setMyAppointments(patientAppointments);
+        setMyAppointments(appRes.data); 
 
         const recRes = await api.get('/medical-records');
         const patientRecords = recRes.data.filter((r: MedicalRecord) => r.patient?.id === parsedPatient.id);
@@ -125,7 +140,7 @@ const PatientDashboard = () => {
     };
 
     fetchData();
-  }, [navigate,activeTab]);
+  }, [navigate, activeTab]);
 
   // Handle Booking
   const handleBookAppointment = async () => {
@@ -390,25 +405,39 @@ const PatientDashboard = () => {
         
         <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '12px' }}>Available Time Slots</label>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '10px', marginBottom: '25px' }}>
-            {timeSlots.map(slot => (
-                <button 
-                    key={slot}
-                    onClick={() => setNewBooking({...newBooking, time: slot})}
-                    style={{
-                        padding: '10px 5px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                        backgroundColor: newBooking.time === slot ? '#0056b3' : '#E8F5E9',
-                        color: newBooking.time === slot ? 'white' : '#2E7D32',
-                        fontWeight: '500',
-                        transition: '0.3s'
-                    }}
-                >
-                    {slot}
-                </button>
-            ))}
+         {timeSlots.map(slot => {
+    const isBooked = bookedSlots.includes(slot);
+
+    return (
+        <button 
+            key={slot}
+            type="button"
+            
+            disabled={isBooked} 
+            onClick={() => setNewBooking({...newBooking, time: slot})}
+            style={{
+                padding: '10px 5px',
+                borderRadius: '6px',
+                border: 'none',
+                fontSize: '0.8rem',
+                cursor: isBooked ? 'not-allowed' : 'pointer',
+                
+              
+                backgroundColor: isBooked ? '#ff4d4f' : (newBooking.time === slot ? '#0056b3' : '#E8F5E9'),
+                color: isBooked || newBooking.time === slot ? 'white' : '#2E7D32',
+                
+                fontWeight: 'bold',
+                opacity: isBooked ? 0.8 : 1, 
+                transition: '0.3s',
+                boxShadow: isBooked ? 'none' : '0 2px 4px rgba(0,0,0,0.05)'
+            }}
+        >
+            {slot}
+           
+            {isBooked && <div style={{fontSize: '0.6rem', marginTop: '2px'}}>Full</div>}
+        </button>
+    );
+})}
         </div>
 
         {/* 4. Reason for Visit */}
