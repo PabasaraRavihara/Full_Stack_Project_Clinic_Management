@@ -31,7 +31,7 @@ interface Appointment {
   time: string;
   status: string;
   patient: Patient;
-  doctor: Doctor; // Doctor විස්තර මෙතනට එකතු කළා
+  doctor: Doctor; 
 }
 
 interface MedicalRecord {
@@ -58,16 +58,17 @@ interface Billing {
 const DoctorDashboard = () => {
   const navigate = useNavigate();
 
+ 
   const [currentTime, setCurrentTime] = useState(new Date());
+
   useEffect(() => {
-  const timer = setInterval(() => {
-    setCurrentTime(new Date());
-  }, 1000);
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-
-  return () => clearInterval(timer);
-}, []);
-
+  
   const [searchTerm, setSearchTerm] = useState('');
 
   const [isLoading, setIsLoading] = useState(true);
