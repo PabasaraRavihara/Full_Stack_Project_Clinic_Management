@@ -334,48 +334,55 @@ const PatientDashboard = () => {
               </div>
 
               {/* BOOKING FORM */}
-              {showBookingForm && (
-                  <div className="card shadow-sm mb-4" style={{background:'white', padding:'20px', borderRadius:'10px', boxShadow:'0 2px 10px rgba(0,0,0,0.1)', marginBottom:'20px'}}>
-                      <h4 style={{fontSize:'1rem', color:'#0056b3', marginBottom:'15px'}}>📅 Book New Appointment</h4>
-                      <div className="row g-3" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'15px'}}>
-                          <div style={{gridColumn:'1 / -1'}}>
-                              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Select Doctor</label>
-                              <select 
-                                className="form-select" 
-                                value={newBooking.doctorId} 
-                                onChange={(e) => setNewBooking({...newBooking, doctorId: e.target.value})}
-                                style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}}
-                              >
-                                  <option value="">-- Choose a Specialist --</option>
-                                  {doctors.map(d => (
-                                      <option key={d.id} value={d.id}>{d.name} ({d.specialization})</option>
-                                  ))}
-                              </select>
-                          </div>
-                          <div>
-                              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Date</label>
-                              <input type="date" value={newBooking.date}
-                              min={today}
-                               onChange={e => setNewBooking({...newBooking, date: e.target.value})} 
-                               style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}} />
-                          </div>
-                          <div>
-                              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Time Slot</label>
-                              <select value={newBooking.time} onChange={e => setNewBooking({...newBooking, time: e.target.value})} style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}}>
-                                  <option value="">-- Choose Time --</option>
-                                  {timeSlots.map(slot => (<option key={slot} value={slot}>{slot}</option>))}
-                              </select>
-                          </div>
-                          <div style={{gridColumn:'1 / -1'}}>
-                              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Reason</label>
-                              <input type="text" placeholder="e.g. Fever, Checkup..." value={newBooking.notes} onChange={e => setNewBooking({...newBooking, notes: e.target.value})} style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}} />
-                          </div>
-                          <div style={{gridColumn:'1 / -1', textAlign:'right'}}>
-                              <button onClick={handleBookAppointment} style={{ backgroundColor: '#28a745', color:'white', border: 'none', padding:'8px 20px', borderRadius:'5px', cursor:'pointer', fontSize:'0.9rem' }}>Confirm Booking</button>
-                          </div>
-                      </div>
-                  </div>
-              )}
+             {showBookingForm && (
+        <div className="card shadow-sm mb-4" style={{background:'white', padding:'20px', borderRadius:'10px', boxShadow:'0 2px 10px rgba(0,0,0,0.1)', marginBottom:'20px'}}>
+          <h4 style={{fontSize:'1rem', color:'#0056b3', marginBottom:'15px'}}>📅 Book New Appointment</h4>
+          <div className="row g-3" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'15px'}}>
+            <div style={{gridColumn:'1 / -1'}}>
+              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Select Doctor</label>
+              <select 
+                className="form-select" 
+                value={newBooking.doctorId} 
+                onChange={(e) => setNewBooking({...newBooking, doctorId: e.target.value})}
+                style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}}
+              >
+                <option value="">-- Choose a Specialist --</option>
+                {doctors.map(d => (
+                  <option key={d.id} value={d.id}>{d.name} ({d.specialization})</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Date</label>
+              <input 
+                type="date" 
+                value={newBooking.date}
+                min={today} 
+                onChange={e => setNewBooking({...newBooking, date: e.target.value})} 
+                style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}} 
+              />
+            </div>
+
+            <div>
+              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Time Slot</label>
+              <select value={newBooking.time} onChange={e => setNewBooking({...newBooking, time: e.target.value})} style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}}>
+                <option value="">-- Choose Time --</option>
+                {timeSlots.map(slot => (<option key={slot} value={slot}>{slot}</option>))}
+              </select>
+            </div>
+
+            <div style={{gridColumn:'1 / -1'}}>
+              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Reason</label>
+              <input type="text" placeholder="e.g. Fever, Checkup..." value={newBooking.notes} onChange={e => setNewBooking({...newBooking, notes: e.target.value})} style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}} />
+            </div>
+
+            <div style={{gridColumn:'1 / -1', textAlign:'right'}}>
+              <button onClick={handleBookAppointment} style={{ backgroundColor: '#28a745', color:'white', border: 'none', padding:'8px 20px', borderRadius:'5px', cursor:'pointer', fontSize:'0.9rem' }}>Confirm Booking</button>
+            </div>
+          </div>
+        </div>
+      )}
 
               <div className="table-container">
                 <table className="data-table">
