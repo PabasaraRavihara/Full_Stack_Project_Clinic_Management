@@ -79,21 +79,24 @@ const PatientDashboard = () => {
       addSlots(17, 22);
       return slots;
   };
-  const timeSlots = generateTimeSlots();
+const timeSlots = generateTimeSlots();
 
- 
+  
   const bookedSlots = myAppointments
-    .filter(app => 
-      app.doctor?.id === parseInt(newBooking.doctorId) && 
-      app.date === newBooking.date &&
-      app.status !== 'CANCELLED'
-    )
-    .map(app => {
+    .filter(app => {
+     
+      const isSameDoctor = String(app.doctor?.id) === String(newBooking.doctorId);
+      const isSameDate = app.date === newBooking.date;
+      const isNotCancelled = app.status !== 'CANCELLED' && app.status !== 'REJECTED';
       
+      return isSameDoctor && isSameDate && isNotCancelled;
+    })
+    .map(app => {
+
       return app.time.substring(0, 5);
     });
 
-  // --- 2. Logout Function 
+  // --- 2. Logout Function ---
   const handleLogout = () => {
     localStorage.removeItem('patientData');
     navigate('/patient-login');
@@ -117,11 +120,9 @@ const PatientDashboard = () => {
         setPatient(parsedPatient);
 
         setLoading(true);
-       
         const appRes = await api.get('/appointments');
         
-       
-        const patientAppointments = appRes.data.filter((a: Appointment) => a.patient?.id === parsedPatient.id);
+   
         setMyAppointments(appRes.data); 
 
         const recRes = await api.get('/medical-records');
@@ -419,6 +420,7 @@ const PatientDashboard = () => {
                 padding: '10px 5px',
                 borderRadius: '6px',
                 border: 'none',
+              
                 fontSize: '0.8rem',
                 cursor: isBooked ? 'not-allowed' : 'pointer',
                 
