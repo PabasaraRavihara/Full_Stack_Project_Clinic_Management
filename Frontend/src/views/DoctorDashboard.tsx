@@ -448,21 +448,7 @@ const handleSaveBill = async () => {
       exit={{ opacity: 0, transition: { duration: 0.5 } }}
       className="dashboard-layout"
     >
-      <div className="search-container" style={{ marginBottom: '20px' }}>
-  <input
-    type="text"
-    placeholder="Search by Patient Name or Email..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    style={{
-      padding: '10px',
-      width: '100%',
-      borderRadius: '8px',
-      border: '1px solid #ddd',
-      fontSize: '1rem'
-    }}
-  />
-</div>
+      
       {/* --- SIDEBAR () --- */}
       <div className="dashboard-sidebar" style={{ backgroundColor: sidebarColor }}>
         <div className="dashboard-logo"><h2 style={{margin:0}}>Doctor Portal</h2></div>
