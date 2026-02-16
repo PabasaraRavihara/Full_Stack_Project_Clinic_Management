@@ -615,10 +615,88 @@ const handleSaveBill = async () => {
                 </section>
               )}
 
-          {/* --- PATIENTS TAB --- */}
+         {/* --- PATIENTS TAB --- */}
 {activeTab === 'patients' && (
   <div className="consultation-section" style={{ padding: '20px' }}>
     
+    {patientSubTab === 'add' && (
+      <div style={{ background: 'white', padding: '25px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', marginBottom: '30px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ margin: 0, color: '#2E7D32' }}>{isEditing ? '📝 Edit Patient Details' : '➕ Register New Patient'}</h3>
+          <button 
+            onClick={() => { setPatientSubTab('view'); setIsEditing(false); }} 
+            style={{ background: '#6c757d', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer' }}
+          >
+            Close Form
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <div className="form-group">
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>First Name</label>
+            <input 
+              type="text" 
+              value={newPatient.firstName} 
+              onChange={(e) => setNewPatient({ ...newPatient, firstName: e.target.value })} 
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+            />
+          </div>
+          <div className="form-group">
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Last Name</label>
+            <input 
+              type="text" 
+              value={newPatient.lastName} 
+              onChange={(e) => setNewPatient({ ...newPatient, lastName: e.target.value })} 
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+            />
+          </div>
+          <div className="form-group">
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Email Address</label>
+            <input 
+              type="email" 
+              value={newPatient.email} 
+              onChange={(e) => setNewPatient({ ...newPatient, email: e.target.value })} 
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+            />
+          </div>
+          <div className="form-group">
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Phone Number</label>
+            <input 
+              type="text" 
+              value={newPatient.phone} 
+              onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })} 
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+            />
+          </div>
+          <div className="form-group">
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Address</label>
+            <input 
+              type="text" 
+              value={newPatient.address} 
+              onChange={(e) => setNewPatient({ ...newPatient, address: e.target.value })} 
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+            />
+          </div>
+          <div className="form-group">
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem' }}>Age</label>
+            <input 
+              type="number" 
+              value={newPatient.age} 
+              onChange={(e) => setNewPatient({ ...newPatient, age: e.target.value })} 
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
+            />
+          </div>
+        </div>
+        
+        <button 
+          onClick={handleSavePatient}
+          style={{ width: '100%', background: '#2E7D32', color: 'white', padding: '12px', border: 'none', borderRadius: '10px', fontWeight: 'bold', marginTop: '20px', cursor: 'pointer' }}
+        >
+          {isEditing ? 'Update Patient Information' : 'Register Patient'}
+        </button>
+      </div>
+    )}
+
     {/* --- 1. Header Section --- */}
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
       <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
@@ -706,32 +784,20 @@ const handleSaveBill = async () => {
                 <td style={{ padding: '12px', fontWeight: '500' }}>{p.firstName} {p.lastName}</td>
                 <td style={{ padding: '12px', color: '#666' }}>{p.email}</td>
                 <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
-                  
-              
                   <button 
                     onClick={() => { setSelectedPatient(p); window.scrollTo({top: 0, behavior: 'smooth'}); }}
                     style={{ background: '#0056b3', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
                   >
                     Select
                   </button>
-
-                 
                   <button 
-                    onClick={() => {
-                    
-                        startEditPatient(p); 
-                    }}
+                    onClick={() => startEditPatient(p)}
                     style={{ background: '#FFC107', color: 'black', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
                   >
                     Edit
                   </button>
-
-                
                   <button 
-                    onClick={() => {
-                        
-                        handleDeletePatient(p.id!);
-                    }}
+                    onClick={() => handleDeletePatient(p.id!)}
                     style={{ background: '#F44336', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
                   >
                     Delete
