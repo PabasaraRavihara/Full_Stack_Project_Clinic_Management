@@ -280,7 +280,6 @@ const fetchData = async () => {
   // --- ACTIONS: RECORDS ---
  
 const handleSaveRecord = async () => {
-    
     if (!selectedPatient) {
         alert("Please select a patient first!");
         return;
@@ -288,13 +287,10 @@ const handleSaveRecord = async () => {
 
     try {
         const config = getAuthConfig();
-        
-       
         const storedData = localStorage.getItem('doctorData');
         const parsed = JSON.parse(storedData || '{}');
         const docId = parsed.doctorId || parsed.id;
 
-        
         const payload = {
             diagnosis: diagnosis, 
             treatment: treatmentPlan, 
@@ -305,15 +301,23 @@ const handleSaveRecord = async () => {
         };
 
        
-        await api.post('/medical-records', payload, config);
-        
-        alert("Consultation Record Saved Successfully!");
+        if (isEditing && editingId) {
+          
+            await api.put(`/medical-records/${editingId}`, payload, config);
+            alert("Consultation Record Updated Successfully!");
+        } else {
+            
+            await api.post('/medical-records', payload, config);
+            alert("Consultation Record Saved Successfully!");
+        }
 
-  
+    
         setDiagnosis('');
         setTreatmentPlan('');
         setSelectedPatient(null);
         setSearchId('');
+        setIsEditing(false); 
+        setEditingId(null);
         
         fetchData();
     } catch (err) {
