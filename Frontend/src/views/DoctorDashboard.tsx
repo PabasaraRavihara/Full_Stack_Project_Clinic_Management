@@ -477,8 +477,13 @@ const handleSaveBill = async () => {
           <button onClick={() => setActiveTab('records')} className={`nav-item ${activeTab === 'records' ? 'active' : ''}`} style={activeTab === 'records' ? { color: activeTextColor } : {}}><ListIcon /> <span>Records</span></button>
           <button onClick={() => setActiveTab('billing')} className={`nav-item ${activeTab === 'billing' ? 'active' : ''}`} style={activeTab === 'billing' ? { color: activeTextColor } : {}}><ListIcon /> <span>Billing</span></button>
         </nav>
-        <div className="dashboard-logout"><button onClick={handleLogout} className="nav-item"><SignInIcon /> <span>Logout</span></button></div>
+        <div className="dashboard-logout">
+          <button onClick={handleLogout} className="nav-item">
+            <SignInIcon /> <span>Logout</span>
+            </button>
+        </div>
       </div>
+      
 
 {/* --- MAIN CONTENT AREA --- */}
       <main className="dashboard-main" style={{ backgroundColor: '#f8f9fa' }}>

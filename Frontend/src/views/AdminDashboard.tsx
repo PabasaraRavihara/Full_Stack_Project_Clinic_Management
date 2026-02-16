@@ -134,7 +134,7 @@ const AdminDashboard = () => {
       alert("Doctor Added Successfully!");
       
       setNewDoctor({ name: '', specialization: '', email: '', phone: '', experience: '', password: '' });
-      // දොස්තර කෙනෙක් එකතු කළ පසු ලැයිස්තුව පමණක් අලුත් කරයි
+      
       const res = await api.get('/doctors', getAuthConfig());
       setDoctorsList(res.data);
       setDoctorSubTab('view');
