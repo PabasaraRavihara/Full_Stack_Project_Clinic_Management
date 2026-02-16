@@ -804,7 +804,7 @@ const handleSaveBill = async () => {
     </div>
   </section>
 )}
-            {/* --- RECORDS TAB --- */}
+{/* --- RECORDS TAB --- */}
 {activeTab === 'records' && (
   <section className="doctors-section">
     <div className="action-buttons-container">
@@ -817,9 +817,7 @@ const handleSaveBill = async () => {
     </div>
 
     {recordSubTab === 'view' ? (
-   
       recordsList.length === 0 ? (
-       
         <div style={{ 
           textAlign: 'center', 
           padding: '60px 20px', 
@@ -842,7 +840,6 @@ const handleSaveBill = async () => {
           <p style={{ fontSize: '0.95rem' }}>There are no medical history records to display. Click <strong>"Add Record"</strong> to create a new one.</p>
         </div>
       ) : (
-       
         <div className="table-container">
           <table className="data-table">
             <thead>
@@ -865,16 +862,32 @@ const handleSaveBill = async () => {
         </div>
       )
     ) : (
-      
       <div className="form-container">
         <h3>{isEditing ? 'Edit Medical Record' : 'Add Medical Record'}</h3>
         <form className="admin-form">
-          <div className="form-group"><label>Patient ID</label><input type="number" value={newRecord.patientId} onChange={e => setNewRecord({...newRecord, patientId: e.target.value})} /></div>
-          <div className="form-group"><label>Doctor ID</label><input type="number" value={newRecord.doctorId} onChange={e => setNewRecord({...newRecord, doctorId: e.target.value})} /></div>
-          <div className="form-group"><label>Record Date</label><input type="date" value={newRecord.recordDate} onChange={e => setNewRecord({...newRecord, recordDate: e.target.value})} /></div>
-          <div className="form-group"><label>Diagnosis</label><input value={newRecord.diagnosis} onChange={e => setNewRecord({...newRecord, diagnosis: e.target.value})} /></div>
-          <div className="form-group"><label>Treatment</label><input value={newRecord.treatment} onChange={e => setNewRecord({...newRecord, treatment: e.target.value})} /></div>
-          <button type="button" className="save-btn" style={{background:'#2E7D32'}} onClick={handleSaveRecord}>{isEditing ? 'Update Record' : 'Save Record'}</button>
+          <div className="form-group">
+            <label>Patient ID</label>
+            <input type="number" value={newRecord.patientId} onChange={e => setNewRecord({...newRecord, patientId: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Doctor ID</label>
+            <input type="number" value={newRecord.doctorId} onChange={e => setNewRecord({...newRecord, doctorId: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Record Date</label>
+            <input type="date" value={newRecord.recordDate} onChange={e => setNewRecord({...newRecord, recordDate: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Diagnosis</label>
+            <input value={newRecord.diagnosis} onChange={e => setNewRecord({...newRecord, diagnosis: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Treatment</label>
+            <input value={newRecord.treatment} onChange={e => setNewRecord({...newRecord, treatment: e.target.value})} />
+          </div>
+          <button type="button" className="save-btn" style={{background:'#2E7D32'}} onClick={handleSaveRecord}>
+            {isEditing ? 'Update Record' : 'Save Record'}
+          </button>
         </form>
       </div>
     )}
