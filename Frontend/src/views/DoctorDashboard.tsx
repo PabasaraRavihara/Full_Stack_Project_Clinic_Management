@@ -278,28 +278,49 @@ const fetchData = async () => {
   };
 
   // --- ACTIONS: RECORDS ---
-  // ✅ Update 2: Record Update එකේදී Patient Name "N/A" වීම වැළැක්වීම
+ 
 const handleSaveRecord = async () => {
-    try { 
-      const config = getAuthConfig();
-      const payload = {
-        diagnosis: newRecord.diagnosis,
-        treatment: newRecord.treatment,
-        notes: newRecord.notes,
-        recordDate: newRecord.recordDate || new Date().toISOString().split('T')[0],
-        patient: { id: Number(newRecord.patientId) } // නම N/A වීම වැළැක්වීමට
-      };
+    
+    if (!selectedPatient) {
+        alert("Please select a patient first!");
+        return;
+    }
 
-      if (isEditing && editingId) {
-        await api.put(`/medical-records/${editingId}`, payload, config);
-        alert("Record Updated!");
-      } else {
+    try {
+        const config = getAuthConfig();
+        
+       
+        const storedData = localStorage.getItem('doctorData');
+        const parsed = JSON.parse(storedData || '{}');
+        const docId = parsed.doctorId || parsed.id;
+
+        
+        const payload = {
+            diagnosis: diagnosis, 
+            treatment: treatmentPlan, 
+            notes: "Doctor Consultation",
+            recordDate: new Date().toISOString().split('T')[0],
+            patient: { id: selectedPatient.id },
+            doctor: { id: docId } 
+        };
+
+       
         await api.post('/medical-records', payload, config);
-        alert("Record Added!");
-      }
-      resetForms(); fetchData(); setRecordSubTab('view');
-    } catch (err) { alert("Error Saving Record!"); }
-  };
+        
+        alert("Consultation Record Saved Successfully!");
+
+  
+        setDiagnosis('');
+        setTreatmentPlan('');
+        setSelectedPatient(null);
+        setSearchId('');
+        
+        fetchData();
+    } catch (err) {
+        console.error("Detailed Error:", err);
+        alert("Error Saving Record! Check network logs.");
+    }
+};
 
   const handleDeleteRecord = async (id: number) => {
       if(!window.confirm("Delete this record?")) return;
@@ -329,9 +350,9 @@ const handleSaveBill = async () => {
     try {
         const config = getAuthConfig();
         
-        // Backend එක බලාපොරොත්තු වන නිවැරදි JSON ව්‍යුහය
+        
         const payload = { 
-            billId: editingId, // PUT එකේදී ID එක Payload එක තුළත් තිබීම වඩාත් සුදුසුයි
+            billId: editingId, 
             amount: Number(newBill.amount), 
             paymentMethod: newBill.paymentMethod, 
             status: newBill.status, 
@@ -340,11 +361,11 @@ const handleSaveBill = async () => {
         };
         
         if(isEditing && editingId) {
-            // PUT request එක
+           
             await api.put(`/billings/${editingId}`, payload, config);
             alert("Bill Updated Successfully!");
         } else {
-            // POST request එක
+          
             await api.post('/billings', payload, config);
             alert("Bill Created Successfully!");
         }
@@ -592,17 +613,18 @@ const handleSaveBill = async () => {
 {activeTab === 'patients' && (
   <div className="consultation-section" style={{ padding: '20px' }}>
     
+    {/* --- 1. Header Section --- */}
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
       <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
-        Consulting: {selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : "කරුණාකර පේෂන්ට් කෙනෙකු තෝරන්න"}
+        Consulting: {selectedPatient ? `${selectedPatient.firstName} ${selectedPatient.lastName}` : "Please Select a Patient"}
       </h2>
       <div style={{ textAlign: 'right', color: '#0056b3' }}>
-        ආයුබෝවන්, <b>Dr. {JSON.parse(localStorage.getItem('doctorData') || '{}').name || 'Specialist'}</b>
+        Welcome, <b>Dr. {JSON.parse(localStorage.getItem('doctorData') || '{}').name || 'Specialist'}</b>
       </div>
     </div>
 
-   
-<div style={{ background: '#e3f2fd', padding: '20px', borderRadius: '15px', display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '30px' }}>
+    {/* --- 2. Search Bar: Search by ID or Name --- */}
+    <div style={{ background: '#e3f2fd', padding: '20px', borderRadius: '15px', display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '30px' }}>
       <input 
         type="text" 
         placeholder="Enter Patient ID or Name..." 
@@ -627,7 +649,7 @@ const handleSaveBill = async () => {
       </button>
     </div>
 
-    
+    {/* --- 3. Consultation Area (Visible when a patient is selected) --- */}
     {selectedPatient && (
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '20px', marginBottom: '40px' }}>
         <div style={{ background: 'white', padding: '20px', borderRadius: '15px', borderLeft: '5px solid #007bff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
@@ -648,7 +670,7 @@ const handleSaveBill = async () => {
         </div>
 
         <div style={{ background: 'white', padding: '15px', borderRadius: '15px', maxHeight: '250px', overflowY: 'auto' }}>
-          <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', borderBottom: '1px solid #eee' }}>History</h4>
+          <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', borderBottom: '1px solid #eee' }}>Medical History</h4>
           {recordsList.filter(r => r.patient?.id === selectedPatient.id).map(r => (
             <div key={r.id} style={{ fontSize: '0.75rem', marginBottom: '10px', padding: '8px', background: '#f8f9fa', borderRadius: '5px' }}>
               <p>📅 {r.recordDate} - {r.diagnosis}</p>
@@ -658,7 +680,7 @@ const handleSaveBill = async () => {
       </div>
     )}
 
-
+  
     <div style={{ background: 'white', padding: '20px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
       <h3 style={{ fontSize: '1.1rem', marginBottom: '15px', color: '#333' }}>All Registered Patients</h3>
       <div style={{ overflowX: 'auto' }}>
@@ -677,12 +699,27 @@ const handleSaveBill = async () => {
                 <td style={{ padding: '12px' }}>#{p.id}</td>
                 <td style={{ padding: '12px', fontWeight: '500' }}>{p.firstName} {p.lastName}</td>
                 <td style={{ padding: '12px', color: '#666' }}>{p.email}</td>
-                <td style={{ padding: '12px' }}>
+                <td style={{ padding: '12px', display: 'flex', gap: '8px' }}>
+                 
                   <button 
                     onClick={() => { setSelectedPatient(p); window.scrollTo({top: 0, behavior: 'smooth'}); }}
-                    style={{ background: '#0056b3', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
+                    style={{ background: '#0056b3', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
                   >
-                    Select to Consult
+                    Select
+                  </button>
+               
+                  <button 
+                    onClick={() => startEditPatient(p)}
+                    style={{ background: '#FFC107', color: 'black', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
+                  >
+                    Edit
+                  </button>
+                  {/* Delete Patient */}
+                  <button 
+                    onClick={() => handleDeletePatient(p.id!)}
+                    style={{ background: '#F44336', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem' }}
+                  >
+                    Delete
                   </button>
                 </td>
               </tr>
