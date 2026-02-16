@@ -5,6 +5,7 @@ import api from '../api/axios.Config.ts';
 import logo from '../assets/logo.png';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion } from 'framer-motion';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 
 // Types 
 interface Doctor {
@@ -55,6 +56,12 @@ const AdminDashboard = () => {
     name: '', specialization: '', email: '', phone: '', experience: '', password: ''
   });
 
+    const statsChartData = [
+    { name: 'Doctors', count: doctorsList.length, color: '#063ca8' },
+    { name: 'Patients', count: patientsList.length, color: '#2E7D32' },
+    { name: 'Appointments', count: appointmentsList.length, color: '#FF8F00' },
+  ];
+
   const handleLogout = () => {
     localStorage.removeItem('adminData'); 
     navigate('/admin-login');
@@ -99,12 +106,12 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // ✅ FETCH ALL DATA (LOADING LOGIC ඇතුළත් කර ඇත)
+  
   const fetchAllData = async () => {
     setIsLoading(true);
     try {
         const config = getAuthConfig();
-        // API Calls 3ම එකවර සිදු කරයි (Promise.all භාවිතයෙන්)
+        
         const [docRes, patRes, appRes] = await Promise.all([
             api.get('/doctors', config),
             api.get('/patients', config),
@@ -117,7 +124,7 @@ const AdminDashboard = () => {
     } catch (err) {
         console.error("Error fetching admin data:", err);
     } finally {
-        // දත්ත ලැබුණු පසු තත්පර 0.8 කින් Loading නතර කරයි
+        
         setTimeout(() => setIsLoading(false), 800);
     }
   };
@@ -241,7 +248,7 @@ const AdminDashboard = () => {
 
         <div className="dashboard-content-wrapper">
           
-          {/* ✅ පියවර 3: LOADING CONDITION ඇතුළත් කිරීම */}
+         
           {isLoading ? (
             <LoadingSpinner />
           ) : (
@@ -252,8 +259,10 @@ const AdminDashboard = () => {
               className="main-slider-viewport"
             >
               <div className={`main-slider-track pos-${activeTab}`}>
-                
-                <div className="main-slider-slide">
+  
+  {/* --- 1. DASHBOARD SLIDE --- */}
+  <div className="main-slider-slide">
+                  {/* --- Stat Cards Section --- */}
                   <section className="dashboard-content">
                     <div className="stat-card">
                       <h3>Total Patients</h3>
@@ -268,7 +277,58 @@ const AdminDashboard = () => {
                       <p>{appointmentsList.length}</p>
                     </div>
                   </section>
-                </div>
+
+                  {/* --- Visual Charts Section --- */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginTop: '30px' }}>
+                    
+                    {/* Bar Chart */}
+                    <div style={{ background: 'white', padding: '20px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                      <h3 style={{ marginBottom: '20px', fontSize: '1rem', color: '#555' }}>System Overview (Real-time)</h3>
+                      <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={statsChartData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip cursor={{fill: '#f4f7fa'}} />
+                            <Bar dataKey="count" radius={[5, 5, 0, 0]}>
+                              {statsChartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Donut Chart */}
+                    <div style={{ background: 'white', padding: '20px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                      <h3 style={{ marginBottom: '20px', fontSize: '1rem', color: '#555' }}>Data Distribution</h3>
+                      <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={statsChartData}
+                              dataKey="count"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                            >
+                              {statsChartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                  </div> {/* Visual Charts Section End */}
+                </div> 
 
                 <div className="main-slider-slide">
                   <section className="doctors-section">
