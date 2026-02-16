@@ -334,55 +334,116 @@ const PatientDashboard = () => {
               </div>
 
               {/* BOOKING FORM */}
-             {showBookingForm && (
-        <div className="card shadow-sm mb-4" style={{background:'white', padding:'20px', borderRadius:'10px', boxShadow:'0 2px 10px rgba(0,0,0,0.1)', marginBottom:'20px'}}>
-          <h4 style={{fontSize:'1rem', color:'#0056b3', marginBottom:'15px'}}>📅 Book New Appointment</h4>
-          <div className="row g-3" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'15px'}}>
-            <div style={{gridColumn:'1 / -1'}}>
-              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Select Doctor</label>
-              <select 
-                className="form-select" 
-                value={newBooking.doctorId} 
-                onChange={(e) => setNewBooking({...newBooking, doctorId: e.target.value})}
-                style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}}
-              >
-                <option value="">-- Choose a Specialist --</option>
-                {doctors.map(d => (
-                  <option key={d.id} value={d.id}>{d.name} ({d.specialization})</option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Date</label>
-              <input 
-                type="date" 
-                value={newBooking.date}
-                min={today} 
-                onChange={e => setNewBooking({...newBooking, date: e.target.value})} 
-                style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}} 
-              />
+            {showBookingForm && (
+    <div className="booking-container" style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', marginBottom: '30px' }}>
+        <h3 style={{ color: '#0056b3', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', fontSize: '1.2rem' }}>
+            📅 Book New Appointment
+        </h3>
+
+        
+        <div style={{ marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '8px' }}>Filter by Specialty</label>
+                <select className="form-select" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #eee' }}>
+                    <option>All Specialties</option>
+                    <option>Eye specialist</option>
+                    <option>Pediatrician</option>
+                    <option>Dermatologist</option>
+                </select>
             </div>
 
-            <div>
-              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Time Slot</label>
-              <select value={newBooking.time} onChange={e => setNewBooking({...newBooking, time: e.target.value})} style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}}>
-                <option value="">-- Choose Time --</option>
-                {timeSlots.map(slot => (<option key={slot} value={slot}>{slot}</option>))}
-              </select>
+            <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '8px' }}>Select Doctor</label>
+                <select 
+                    value={newBooking.doctorId} 
+                    onChange={(e) => setNewBooking({...newBooking, doctorId: e.target.value})}
+                    className="form-select" 
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #eee' }}
+                >
+                    <option value="">-- Choose a Specialist --</option>
+                    {doctors.map(d => (
+                        <option key={d.id} value={d.id}>{d.name} ({d.specialization})</option>
+                    ))}
+                </select>
             </div>
-
-            <div style={{gridColumn:'1 / -1'}}>
-              <label style={{fontSize:'0.85rem', fontWeight:'bold', display:'block', marginBottom:'5px'}}>Reason</label>
-              <input type="text" placeholder="e.g. Fever, Checkup..." value={newBooking.notes} onChange={e => setNewBooking({...newBooking, notes: e.target.value})} style={{width:'100%', padding:'8px', borderRadius:'5px', border:'1px solid #ddd'}} />
-            </div>
-
-            <div style={{gridColumn:'1 / -1', textAlign:'right'}}>
-              <button onClick={handleBookAppointment} style={{ backgroundColor: '#28a745', color:'white', border: 'none', padding:'8px 20px', borderRadius:'5px', cursor:'pointer', fontSize:'0.9rem' }}>Confirm Booking</button>
-            </div>
-          </div>
         </div>
-      )}
+
+        
+        <div style={{ marginBottom: '25px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '8px' }}>Select Date</label>
+            <div style={{ padding: '15px', border: '1px solid #f0f0f0', borderRadius: '12px', textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', color: '#0056b3', fontWeight: 'bold' }}>
+                    <span>&lt; Prev</span>
+                    <span>April 2026</span>
+                    <span>Next &gt;</span>
+                </div>
+                <input 
+                    type="date" 
+                    value={newBooking.date}
+                    min={today} 
+                    onChange={(e) => setNewBooking({...newBooking, date: e.target.value})}
+                    style={{ width: '100%', padding: '12px', border: '1.5px solid #0056b3', borderRadius: '8px', textAlign: 'center', fontSize: '1rem' }}
+                />
+            </div>
+        </div>
+
+        
+        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '12px' }}>Available Time Slots</label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '10px', marginBottom: '25px' }}>
+            {timeSlots.map(slot => (
+                <button 
+                    key={slot}
+                    onClick={() => setNewBooking({...newBooking, time: slot})}
+                    style={{
+                        padding: '10px 5px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        backgroundColor: newBooking.time === slot ? '#0056b3' : '#E8F5E9',
+                        color: newBooking.time === slot ? 'white' : '#2E7D32',
+                        fontWeight: '500',
+                        transition: '0.3s'
+                    }}
+                >
+                    {slot}
+                </button>
+            ))}
+        </div>
+
+        {/* 4. Reason for Visit */}
+        <div style={{ marginBottom: '25px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '8px' }}>Reason for Visit</label>
+            <input 
+                type="text" 
+                placeholder="e.g. Annual checkup, Flu symptoms..." 
+                value={newBooking.notes}
+                onChange={(e) => setNewBooking({...newBooking, notes: e.target.value})}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1.5px solid #eee' }} 
+            />
+        </div>
+
+        {/* 5. Action Button */}
+        <div style={{ textAlign: 'right' }}>
+            <button 
+                onClick={handleBookAppointment}
+                disabled={!(newBooking.date && newBooking.time && newBooking.doctorId)}
+                style={{ 
+                    backgroundColor: (newBooking.date && newBooking.time && newBooking.doctorId) ? '#0056b3' : '#ccc', 
+                    color: 'white', 
+                    padding: '12px 35px', 
+                    borderRadius: '8px', 
+                    border: 'none', 
+                    fontWeight: 'bold', 
+                    cursor: (newBooking.date && newBooking.time && newBooking.doctorId) ? 'pointer' : 'not-allowed',
+                    transition: '0.3s'
+                }}
+            >
+                Confirm Booking
+            </button>
+        </div>
+    </div>
+)}
 
               <div className="table-container">
                 <table className="data-table">
