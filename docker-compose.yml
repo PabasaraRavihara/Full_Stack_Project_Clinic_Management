@@ -2,16 +2,16 @@ version: '3.8'
 
 services:
   # 1. Backend Service
-  # මෙහි තිබූ mysqldb කොටස සම්පූර්ණයෙන්ම ඉවත් කර ඇත
+  
   backend:
     build: ./Backend  
     container_name: clinic-backend
     ports:
       - "8083:8083"
-    # Neon භාවිතා කරන නිසා මෙහි තිබූ depends_on ඉවත් කර ඇත
+    # Neon 
     environment:
-      # දත්ත පද්ධති සැකසුම් application.properties හරහා ක්‍රියාත්මක වන බැවින් 
-      # මෙහි තිබූ SPRING_DATASOURCE_URL වැනි දෑ ඉවත් කිරීම වඩාත් සුදුසුයි
+      
+     
       - SPRING_PROFILES_ACTIVE=default
 
   # 2. Frontend Service 
@@ -26,4 +26,3 @@ services:
     depends_on:
       - backend
 
-# MySQL වලට අදාළ volumes ද ඉවත් කර ඇත

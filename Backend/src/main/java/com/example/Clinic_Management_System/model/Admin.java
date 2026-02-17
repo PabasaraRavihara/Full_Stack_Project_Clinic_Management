@@ -14,8 +14,8 @@ public class Admin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="id") // Database එකේ column නම
-    private Long id; // මෙතැන 'adminId' වෙනුවට 'id' ලෙස වෙනස් කළා
+    @Column(name="id") 
+    private Long id; 
 
     @Column(name = "name", nullable = false)
     private String name;

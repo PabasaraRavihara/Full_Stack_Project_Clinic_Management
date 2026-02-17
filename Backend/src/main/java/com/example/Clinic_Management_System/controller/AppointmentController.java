@@ -100,7 +100,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.getAllAppointments());
     }
 
-    // දොස්තරගේ ID එක අනුව පෙරීමට අලුතින් එක් කළ Endpoint එක
+    
     @GetMapping("/doctor/{doctorId}")
     public ResponseEntity<List<Appointment>> getAppointmentsByDoctor(@PathVariable Long doctorId) {
         return ResponseEntity.ok(appointmentService.getAppointmentsByDoctorId(doctorId));

@@ -362,7 +362,7 @@ const handleSaveBill = async () => {
             amount: Number(newBill.amount), 
             paymentMethod: newBill.paymentMethod, 
             status: newBill.status, 
-            paymentDate: new Date().toISOString().slice(0, 19).replace('T', ' '), // "yyyy-MM-dd HH:mm:ss" format එකට
+            paymentDate: new Date().toISOString().slice(0, 19).replace('T', ' '), // "yyyy-MM-dd HH:mm:ss" format 
             appointment: { id: Number(newBill.appointmentId) } 
         };
         

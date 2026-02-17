@@ -24,7 +24,7 @@ public class Appointment {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
     
-    // මෙතන තිබුණු columnDefinition = "TIME(0)" අයින් කළා
+    
     @JsonFormat(pattern = "HH:mm:ss")
     @Column(name = "time")
     private LocalTime time;
@@ -39,7 +39,7 @@ public class Appointment {
     @JoinColumn(name = "doctor_id", nullable = false)
     private Doctor doctor;
 
-    // මෙතන තිබුණු columnDefinition = "DATETIME(0)" අයින් කළා
+    
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "appointment_time", nullable = false)
     private LocalDateTime appointmentTime;

@@ -54,10 +54,10 @@ public class DoctorController {
 
             String token = jwtUtil.generateToken(email, "ROLE_DOCTOR");
 
-            // ✅ ලොගින් වන දොස්තරගේ ID එක සොයා ගැනීම
+           
             Doctor doctor = doctorService.findByEmail(email);
 
-            // ✅ ඔබ ඉල්ලූ පරිදි ResponseEntity එක සකස් කිරීම
+          
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
             if (doctor != null) {
